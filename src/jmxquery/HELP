@@ -1,0 +1,42 @@
+Usage: check_jmx -U url -O object_name -A attribute [-K compound_key] [-I attribute_info] [-J attribute_info_key] -w warn_limit -c crit_limit [-v[vvv]] [-help]
+
+options are:
+
+-help 
+	Prints this page
+	
+-U 
+	JMX URL, for example: "service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi"
+	
+-O 
+    Object name to be checked, for example, "java.lang:type=Memory"
+    
+-A 
+	Attribute of the object to be checked, for example, "NonHeapMemoryUsage"
+	
+-K 
+    Attribute key for -A attribute compound data, for example, "used" (optional)
+	
+-I
+    Attribute of the object containing information for text output (optional)
+    
+-J 
+    Attribute key for -I attribute compound data, for example, "used" (optional)
+
+-v[vvv]
+	verbatim level controlled as a number of v (optional)
+
+-w 
+	warning long value
+
+-c
+	critical long value
+	
+-username
+	monitorRole jmx username
+	
+-password 
+	monitorRole jmx password
+
+Note that if warning level > critical, system checks object attribute value to be LESS THAN OR EQUAL warning, critical
+If warning level < critical, system checks object attribute value to be MORE THAN OR EQUAL warning, critical 
