@@ -18,25 +18,22 @@ import javax.management.openmbean.CompositeType;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-
-import com.sun.tools.attach.VirtualMachineDescriptor;
-import com.sun.tools.attach.VirtualMachine;
-import com.sun.tools.attach.AttachNotSupportedException;
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ReflectionException;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.InvalidKeyException;
 
+import com.sun.tools.attach.VirtualMachineDescriptor;
+import com.sun.tools.attach.VirtualMachine;
+import com.sun.tools.attach.AttachNotSupportedException;
 
 /**
  * 
  * JMXQuery is used for local or remote request of JMX attributes
  * 
- * This plugin was found on nagiosexchange.  It lacked a username/password/role system.
- * 
- * @author unknown
- * @author Ryan Gravener (<a href="http://ryangravener.com/app/contact">rgravener</a>)
  * @author David Gildeh (www.dataloop.io)
  * 
  */
@@ -125,9 +122,17 @@ public class JMXQuery {
             JMXQuery query = new JMXQuery();
                         
             query.url = query.getLocalJMXUrls("org.netbeans.Main");
+            
+            if (query.url == null) {
+                System.out.print("Could not find URL");
+                System.exit(3);                
+            }
+            
             query.connect();
             
-            Object attr = query.connection.getAttribute(new ObjectName("java.lang.Memory"), "HeapMemoryUsage");
+            query.test();
+                        
+            //Object attr = query.connection.getAttribute(new ObjectName("java.lang.Memory"), "HeapMemoryUsage");
             
                         
 //                        int status;
@@ -148,6 +153,81 @@ public class JMXQuery {
 //                        }       
                         System.exit(0);
                 }
+        
+        /**
+         * Main function for fetching JMX metrics. Will return null if the metric path 
+         * is not found in MBean tree.
+         * 
+         * @param domain    The domain name (i.e. java.lang)
+         * @param type      The type of mbean
+         * @param name      (Optional) They name of the mbean is needed. Null if not
+         * @param attribute The attribute to read from the mbean
+         * @param key       (Option) If the attribute is Composite, specify the key of the
+         *                      specific value to read
+         * @return          The string value of the metric, or null if not found
+         */
+        private String fetchValue(String domain, String type, String name, String attribute, String key) {
+            
+            Object value;
+            String strValue;
+            
+            try {
+                String obName = domain + ":type=" + type;
+                if (name != null) {
+                    obName += ",name=" + name;
+                }
+                ObjectName objectName = new ObjectName(obName);
+                value = connection.getAttribute(objectName, attribute);
+                
+            } catch (MalformedObjectNameException | MBeanException | AttributeNotFoundException 
+                    | InstanceNotFoundException | ReflectionException | IOException e) {
+                // If we can't find the value specified return null
+                return null;
+            }
+            
+            if (value instanceof CompositeData) {
+                CompositeData data = (CompositeData) value;
+                try {
+                    if ((!key.equals("")) && (key != null)) {
+                        strValue = data.get(key).toString();
+                    } else {
+                        return null;
+                    }
+                } catch (InvalidKeyException e) {
+                    // Ket doesn't exist so return null
+                    return null;
+                }
+                
+            } else {
+                strValue = value.toString();
+            }
+            
+            return strValue;  
+        }
+        
+        /**
+         * Get key JVM stats to test connection is working
+         */
+        private void test() {
+            
+            HashMap<String, String> values = new HashMap<String, String>();
+            
+            values.put("jvm.classloading.loadedclasscount", fetchValue("java.lang", "ClassLoading", null, "LoadedClassCount", null));
+            values.put("jvm.memory.committed", fetchValue("java.lang", "Memory", null, "HeapMemoryUsage", "committed"));
+            values.put("jvm.memory.init", fetchValue("java.lang", "Memory", null, "HeapMemoryUsage", "init"));
+            values.put("jvm.memory.max", fetchValue("java.lang", "Memory", null, "HeapMemoryUsage", "max"));
+            values.put("jvm.memory.used", fetchValue("java.lang", "Memory", null, "HeapMemoryUsage", "used"));
+            values.put("jvm.threadcount", fetchValue("java.lang", "Threading", null, "ThreadCount", null));
+            values.put("jvm.gc.collectioncount", fetchValue("java.lang", "GarbageCollector", "PS MarkSweep", "CollectionCount", null));
+
+            String output = "OK | ";
+            
+            for (String key : values.keySet()) {
+                output += key + "=" + values.get(key) + ";;;; ";
+            }
+            
+            System.out.println(output);
+        }
 
         private int report(Exception ex, PrintStream out)
         {
