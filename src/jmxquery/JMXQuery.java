@@ -83,7 +83,9 @@ public class JMXQuery {
                     return connectorAddress;
                 }
 
-            } catch (AttachNotSupportedException | IOException e) {
+            } catch (AttachNotSupportedException ae) {
+                // Skip
+            } catch (IOException e) {
                 // Skip
             }
         }
@@ -145,7 +147,22 @@ public class JMXQuery {
             ObjectName objectName = new ObjectName(obName);
             value = connection.getAttribute(objectName, attribute);
 
-        } catch (MalformedObjectNameException | MBeanException | AttributeNotFoundException | InstanceNotFoundException | ReflectionException | IOException e) {
+        } catch (MalformedObjectNameException e) {
+            // If we can't find the value specified return null
+            return null;
+        } catch (MBeanException e) {
+            // If we can't find the value specified return null
+            return null;
+        } catch (AttributeNotFoundException e) {
+            // If we can't find the value specified return null
+            return null;
+        } catch (InstanceNotFoundException e) {
+            // If we can't find the value specified return null
+            return null;
+        } catch (ReflectionException e) {
+            // If we can't find the value specified return null
+            return null;
+        } catch (IOException e) {
             // If we can't find the value specified return null
             return null;
         }
