@@ -100,8 +100,15 @@ public class JMXQuery {
        
         if (query.outputJSON) {
             System.out.println("[");
+            int count = 0;
             for (JMXMetric metric : query.metrics) {
-                System.out.println(metric.toJSON());
+                if (count > 0) {
+                    System.out.print(", \n" + metric.toJSON());
+                } else {
+                    count++;
+                    System.out.print(metric.toJSON());
+                }
+                
             }
             System.out.println("]");
         } else {
