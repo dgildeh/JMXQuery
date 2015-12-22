@@ -17,7 +17,7 @@ def test():
     query = "jvm.classloading.loadedclasscount=java.lang:type=ClassLoading/LoadedClassCount;" + \
             "jvm.memory.heap.committed=java.lang:type=Memory/HeapMemoryUsage/committed"
 
-    command = [JDK_PATH, '-jar', JAR_PATH, "-proc", "org.netbeans.Main", "-metrics", query, "-json"]
+    command = [JDK_PATH, '-jar', JAR_PATH, '-url', 'service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi', "-metrics", query, "-json"]
     jsonOutput = subprocess.check_output(command)
 
     metrics = json.loads(jsonOutput)

@@ -195,15 +195,11 @@ public class JMXConnector {
                 Set<ObjectInstance> instances = connection.queryMBeans(new ObjectName(domain + ":*"), null);
                 Iterator<ObjectInstance> iterator = instances.iterator();
                 
-                System.out.println("DOMAIN: " + domain);
-
                 while (iterator.hasNext()) {
                     ObjectInstance instance = iterator.next(); 
                     // Get list of attributes for MBean
                     MBeanInfo info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));
-                    
-                    System.out.println("MBEAN: " + instance.getObjectName().toString());
-                    
+                      
                     MBeanAttributeInfo[] attributes = info.getAttributes();
                     for (MBeanAttributeInfo attribute : attributes) {
                         
