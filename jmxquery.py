@@ -29,7 +29,7 @@ def getMetrics():
     print output
   
 def listMBeans():
-    query = "java.lang:type=MemoryPool,*/*/init2"
+    query = "java.lang:type=MemoryPool,*/Usage/"
     command = [JDK_PATH, '-jar', JAR_PATH, '-url', 'service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi', "-list", "mbeans", query]
     output = subprocess.check_output(command)
     print output

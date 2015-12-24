@@ -47,7 +47,7 @@ public class JMXQuery {
         JMXQuery query = new JMXQuery();
         query.parse(args);
         
-        query.processName = "org.netbeans.Main";
+        //query.processName = "org.netbeans.Main";
         //query.metrics.add(new JMXMetric("jvm.{name}.collectiontime", "java.lang:type=GarbageCollector,*", "CollectionTime", null));
         
         // Initialise JMX Connection
