@@ -300,7 +300,15 @@ public class JMXConnector {
                 
                 attributes.add(foundAttribute);
             }
-        }  
+        } else {
+            
+                // Just list the metric attributes
+                
+                JMXMetric foundAttribute = new JMXMetric(attribute.getMetric(), attribute.getmBeanName(),
+                                                     attribute.getAttribute(), null);
+                
+                attributes.add(foundAttribute);      
+        }
         
         return attributes;
     }
