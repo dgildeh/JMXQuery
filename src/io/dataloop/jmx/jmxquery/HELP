@@ -23,11 +23,12 @@ options are:
         {attributeKey} is optional and only used for Composite metric types. Use semi-colon to
         separate metrics.
     
--list [listType]
+-list [listType] [query]
         Will list out the following depending on listType given:
 
             jvms: (*) Will list all local JVMs with their JMX connection URLs or null if none
             mbeans: Will show full JMX tree with all mbeans and their attributes
+                    This option requires the [query] parameter to filter. Use *:* to list everything
 
 - incjvm
         Will add all standard JVM metrics to the -metrics query if used under java.lang domain

@@ -29,8 +29,14 @@ public class JMXQuery {
     String password = null;
     boolean list = false;
     String listType = null;
+    String listQuery = "*:*";
     boolean outputJSON = false;
     boolean includeJVMMetrics = false;
+    
+    // Constants
+    public static final String JVM_LIST = "jvms";
+    public static final String MBEAN_LIST = "mbeans";
+    
 
     /**
      * @param args
@@ -50,7 +56,7 @@ public class JMXQuery {
         
         // Handle list commands
         if (query.list) {
-            if (query.listType.equals("jvms")) {
+            if (query.listType.equals(JMXQuery.JVM_LIST)) {
                 
                 ArrayList<LocalJMXConnection> localJVMs = JMXTools.getLocalJVMs();
                 
@@ -67,9 +73,9 @@ public class JMXQuery {
                     } 
                 }
                 
-            } else if (query.listType.equals("mbeans")) {
+            } else if (query.listType.equals(JMXQuery.MBEAN_LIST)) {
                 
-                ArrayList<JMXMetric> treeMetrics = query.connector.getMBeansTree();
+                ArrayList<JMXMetric> treeMetrics = query.connector.getMBeansTree(query.listQuery);
                 int count = 0;
                 
                 if (query.outputJSON) {
@@ -199,6 +205,10 @@ public class JMXQuery {
                     
                     list = true;
                     listType = args[++i];
+                    
+                    if (listType.equals(JMXQuery.MBEAN_LIST)) {
+                        listQuery = args[++i];
+                    }
 
                 } else if (option.equals("-json")) {
                     outputJSON = true;

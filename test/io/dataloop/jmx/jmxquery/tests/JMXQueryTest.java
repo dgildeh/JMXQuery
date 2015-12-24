@@ -70,4 +70,13 @@ public class JMXQueryTest {
         JMXQuery.main(new String[]{"-url", url, 
                         "-list", "jvms"});
     }
+    
+    @Test
+    public void testListMBeans() throws Exception {
+        
+        String url = JMXTools.getLocalJMXConnection("org.netbeans.Main");
+        System.out.println(url);
+        
+        JMXQuery.main(new String[]{"-url", url, "-list", "mbeans", "*:*"});
+    }
 }

@@ -178,56 +178,51 @@ public class JMXConnector {
     /**
      * Gets the full JMX MBean tree with all their attributes
      * 
+     * @param query         Query to filter tree on, use * to list everything
      * @return
      * @throws IOException 
      */
-    public ArrayList<JMXMetric> getMBeansTree() throws IOException {
+    public ArrayList<JMXMetric> getMBeansTree(String query) throws IOException {
         
         ArrayList<JMXMetric> metrics = new ArrayList<JMXMetric>();
         
-        String[] domains = connection.getDomains();
-
         try {
-            // Iterate through domains
-            for (String domain : domains) {
-
-                // Get list of MBeans for domain           
-                Set<ObjectInstance> instances = connection.queryMBeans(new ObjectName(domain + ":*"), null);
-                Iterator<ObjectInstance> iterator = instances.iterator();
+        
+            // Get list of MBeans for domain           
+            Set<ObjectInstance> instances = connection.queryMBeans(new ObjectName(query), null);
+            Iterator<ObjectInstance> iterator = instances.iterator();
                 
-                while (iterator.hasNext()) {
-                    ObjectInstance instance = iterator.next(); 
-                    // Get list of attributes for MBean
-                    MBeanInfo info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));
+            while (iterator.hasNext()) {
+                ObjectInstance instance = iterator.next(); 
+                // Get list of attributes for MBean
+                MBeanInfo info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));
                       
-                    MBeanAttributeInfo[] attributes = info.getAttributes();
-                    for (MBeanAttributeInfo attribute : attributes) {
+                MBeanAttributeInfo[] attributes = info.getAttributes();
+                for (MBeanAttributeInfo attribute : attributes) {
                         
-                        // Get keys if Composite Data Attribute
-                        if (attribute.getType().contains("CompositeData")) {
-                            CompositeData cData = (CompositeData) connection.getAttribute(instance.getObjectName(), 
-                                    attribute.getName());
-                            // Skip over null values
-                            if (cData == null) {
-                                JMXMetric metric = new JMXMetric(null, instance.getObjectName().toString(), attribute.getName(), null);
-                                metric.setAttributeType(attribute.getType());
-                                metrics.add(metric);
-                                continue;
-                            }
-                            
-                            Set<String> keys = cData.getCompositeType().keySet(); 
-                            for (String key : keys) {
-                                JMXMetric metric = new JMXMetric(null, instance.getObjectName().toString(), attribute.getName(), key);
-                                metrics.add(metric);
-                            }
-                        } else {
+                // Get keys if Composite Data Attribute
+                if (attribute.getType().contains("CompositeData")) {
+                        CompositeData cData = (CompositeData) connection.getAttribute(instance.getObjectName(), 
+                                attribute.getName());
+                        // Skip over null values
+                        if (cData == null) {
                             JMXMetric metric = new JMXMetric(null, instance.getObjectName().toString(), attribute.getName(), null);
                             metric.setAttributeType(attribute.getType());
                             metrics.add(metric);
-                        }   
-                    }
-                }
+                            continue;
+                        }
 
+                        Set<String> keys = cData.getCompositeType().keySet(); 
+                        for (String key : keys) {
+                            JMXMetric metric = new JMXMetric(null, instance.getObjectName().toString(), attribute.getName(), key);
+                            metrics.add(metric);
+                        }
+                    } else {
+                        JMXMetric metric = new JMXMetric(null, instance.getObjectName().toString(), attribute.getName(), null);
+                        metric.setAttributeType(attribute.getType());
+                        metrics.add(metric);
+                    }   
+                }
             }
         } catch (Exception e) {
             System.err.println("Error listing MBean Tree: " + Arrays.toString(e.getStackTrace()));    
