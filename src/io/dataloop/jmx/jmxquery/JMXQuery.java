@@ -47,8 +47,8 @@ public class JMXQuery {
         JMXQuery query = new JMXQuery();
         query.parse(args);
         
-        //query.processName = "org.netbeans.Main";
-        //query.metrics.add(new JMXMetric("jvm.{name}.collectiontime", "java.lang:type=GarbageCollector,*", "CollectionTime", null));
+        query.processName = "org.netbeans.Main";
+        query.includeJVMMetrics = true;
         
         // Initialise JMX Connection
         if (query.processName != null) {
@@ -78,7 +78,7 @@ public class JMXQuery {
                 
             } else if (query.listType.equals(JMXQuery.MBEAN_LIST)) {
                 
-                ArrayList<JMXMetric> treeMetrics = query.connector.getMBeansTree(query.listQuery, false);
+                ArrayList<JMXMetric> treeMetrics = query.connector.listMetrics(query.listQuery);
                 int count = 0;
                 
                 if (query.outputJSON) {
@@ -105,12 +105,12 @@ public class JMXQuery {
         }
         
         // Get metrics and print out
-        query.connector.fetchValues(query.metrics);
+        ArrayList<JMXMetric> outputMetrics = query.connector.getMetrics(query.metrics);
        
         if (query.outputJSON) {
             System.out.println("[");
             int count = 0;
-            for (JMXMetric metric : query.metrics) {
+            for (JMXMetric metric : outputMetrics) {
                 if (count > 0) {
                     System.out.print(", \n" + metric.toJSON());
                 } else {
@@ -121,10 +121,13 @@ public class JMXQuery {
             }
             System.out.println("]");
         } else {
-            for (JMXMetric metric : query.metrics) {
+            for (JMXMetric metric : outputMetrics) {
                 System.out.println(metric.toString());
             }
         }
+        
+        // Disconnect from JMX Cleanly
+        query.connector.disconnect();
     }
 
     /**
@@ -137,7 +140,11 @@ public class JMXQuery {
         metrics.add(new JMXMetric("jvm.classloading.loadedclasscount", "java.lang:type=ClassLoading", "LoadedClassCount", null));
         metrics.add(new JMXMetric("jvm.classloading.unloadedclasscount", "java.lang:type=ClassLoading", "UnloadedClassCount", null));
         metrics.add(new JMXMetric("jvm.classloading.totalloadedclasscount", "java.lang:type=ClassLoading", "TotalLoadedClassCount", null));
-
+        
+        // Garbage Collection
+        metrics.add(new JMXMetric("jvm.gc.[name].collectiontime", "java.lang:type=GarbageCollector,*", "CollectionTime", null));
+        metrics.add(new JMXMetric("jvm.gc.[name].collectioncount", "java.lang:type=GarbageCollector,*", "CollectionCount", null));
+        
         // Memory            
         metrics.add(new JMXMetric("jvm.memory.heap.committed", "java.lang:type=Memory", "HeapMemoryUsage", "committed"));
         metrics.add(new JMXMetric("jvm.memory.heap.init", "java.lang:type=Memory", "HeapMemoryUsage", "init"));

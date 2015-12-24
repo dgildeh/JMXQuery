@@ -5,19 +5,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.ReflectionException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.InvalidKeyException;
 import javax.management.remote.JMXConnectorFactory;
@@ -104,86 +103,40 @@ public class JMXConnector {
     }
     
     /**
-     * Fetches a list of metrics in one go
+     * Fetches a list of metrics and their values in one go
      * 
      * @param metricsList   List of JMXMetrics to fetch
      * @return              metricsList with values for each metric populated
+     * @throws java.io.IOException
      */
-    public ArrayList<JMXMetric> fetchValues(ArrayList<JMXMetric> metricsList) {
+    public ArrayList<JMXMetric> getMetrics(ArrayList<JMXMetric> metricsList) throws IOException {
+        ArrayList<JMXMetric> newMetricList = new ArrayList<JMXMetric>();
         for (JMXMetric metric : metricsList) {
-            fetchValue(metric);
-        }
-        
-        return metricsList;
+            ArrayList<JMXMetric> fetchedMetrics = getMetrics(metric, true);
+            newMetricList.addAll(fetchedMetrics);
+        }  
+        return newMetricList;
     } 
-
+    
     /**
-     * Main function for fetching JMX metrics. Will return null if the metric
-     * path is not found in MBean tree.
-     *
-     * @param metric    
-     * @return The string value of the metric, or null if not found
+     * List all the metrics for a particular query
+     * 
+     * @param metricQuery   Search query to filter on, *:* will return everything
+     * @return              JMX Metrics that match search query
      */
-    public String fetchValue(JMXMetric metric) {
-        
-        Object value; 
-        
-        try {
-            
-            ObjectName objectName = new ObjectName(metric.getmBeanName());
-            value = connection.getAttribute(objectName, metric.getAttribute());
-
-        } catch (MalformedObjectNameException e) {
-            // If we can't find the value specified return null
-            value = null;
-        } catch (MBeanException e) {
-            // If we can't find the value specified return null
-            value = null;
-        } catch (AttributeNotFoundException e) {
-            // If we can't find the value specified return null
-            value = null;
-        } catch (InstanceNotFoundException e) {
-            // If we can't find the value specified return null
-            value = null;
-        } catch (ReflectionException e) {
-            // If we can't find the value specified return null
-            value = null;
-        } catch (IOException e) {
-            // If we can't find the value specified return null
-            value = null;
-        }
-
-        if (value instanceof CompositeData) {
-            CompositeData data = (CompositeData) value;
-            try {                
-                if (metric.getAttributeKey() != null) {
-                    value = data.get(metric.getAttributeKey());
-                } else {
-                    value = null;
-                }
-            } catch (InvalidKeyException e) {
-                // Ket doesn't exist so return null
-                value = null;
-            }
-        } 
-        
-        metric.setValue(value);
-        if (value != null) {
-            return value.toString();
-        } else {
-            return null;
-        }    
+    public ArrayList<JMXMetric> listMetrics(JMXMetric metricQuery) throws IOException {
+        return getMetrics(metricQuery, false);
     }
     
     /**
-     * Gets the full JMX MBean tree with all their attributes
+     * Main function to query and get metrics from JMX
      * 
-     * @param metricQuery       Metric query to filter tree on, use *:* to list everything
+     * @param metricQuery       Metric query to filter on, use *:* to list everything
      * @param getValues         true = get values for each metric, false = only get metric paths
      * @return
      * @throws IOException 
      */
-    public ArrayList<JMXMetric> getMBeansTree(JMXMetric metricQuery, boolean getValues) throws IOException {
+    private ArrayList<JMXMetric> getMetrics(JMXMetric metricQuery, boolean getValues) throws IOException {
         
         ArrayList<JMXMetric> metrics = new ArrayList<JMXMetric>();
         
@@ -245,6 +198,9 @@ public class JMXConnector {
     private ArrayList<JMXMetric> getAttribute(JMXMetric attribute, boolean getValues) throws Exception {
         
         ArrayList<JMXMetric> attributes = new ArrayList<JMXMetric>();
+        
+        // Format attribute metric name if needed
+        formatMetricName(attribute);
         
         // Get keys if Composite Data Attribute
         if (attribute.getAttributeType().contains("CompositeData") || getValues) {
@@ -311,5 +267,52 @@ public class JMXConnector {
         }
         
         return attributes;
+    }
+    
+    /**
+     * Replaces any [] tokens in metric names with the value from the MBean name if
+     * present otherwise will not replace. 
+     * 
+     * For example:
+     * 
+     * jvm.gc.[name].collectioncount = java.lang:type=GarbageCollector,name=PS Scavenge/CollectionTime
+     * 
+     * Will update [name] to: jvm.gc.PS_Scavenge.collectioncount
+     * 
+     * @param metric    The metric to update name for
+     */
+    private void formatMetricName(JMXMetric metric) {
+        
+        // Check if variable in name
+        if (metric.getMetric().contains("[")) {
+            
+            Pattern pattern = Pattern.compile("\\[(.+?)\\]");
+            Matcher matcher = pattern.matcher(metric.getMetric());
+            Hashtable<String, String> replacements;
+            
+            // Populate replacements from MBean ObjectName
+            try {
+                ObjectName name = new ObjectName(metric.getmBeanName());
+                replacements = name.getKeyPropertyList();
+            } catch (MalformedObjectNameException e) {
+                return;
+            }
+            
+            StringBuilder builder = new StringBuilder();
+            int i = 0;
+            while (matcher.find()) {
+                String replacement = replacements.get(matcher.group(1));
+                builder.append(metric.getMetric().substring(i, matcher.start()));
+                if (replacement == null) {
+                    builder.append(matcher.group(0));
+                    i = matcher.end();
+                } else {
+                    builder.append(replacement.replaceAll(" ", "_").toLowerCase());
+                    i = matcher.end();
+                }
+            }
+            builder.append(metric.getMetric().substring(i, metric.getMetric().length()));
+            metric.setMetric(builder.toString());
+        }
     }
 }
