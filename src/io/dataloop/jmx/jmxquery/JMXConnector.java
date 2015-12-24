@@ -284,7 +284,7 @@ public class JMXConnector {
     private void formatMetricName(JMXMetric metric) {
         
         // Check if variable in name
-        if (metric.getMetric().contains("[")) {
+        if (metric.getMetric() != null && metric.getMetric().contains("[")) {
             
             Pattern pattern = Pattern.compile("\\[(.+?)\\]");
             Matcher matcher = pattern.matcher(metric.getMetric());
