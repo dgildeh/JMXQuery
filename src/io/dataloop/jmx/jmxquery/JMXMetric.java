@@ -110,7 +110,10 @@ public class JMXMetric {
         if (this.metric != null) {
             s += this.metric + "=";
         }
-        s += this.mBeanName + "/" + this.attribute;
+        s += this.mBeanName;
+        if (this.attribute != null) {
+            s += "/" + this.attribute;
+        }
         if (this.attributeKey != null) {
             s += "/" + this.attributeKey;
         }

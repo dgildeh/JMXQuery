@@ -29,7 +29,7 @@ public class JMXQuery {
     String password = null;
     boolean list = false;
     String listType = null;
-    String listQuery = "*:*";
+    JMXMetric listQuery = null;
     boolean outputJSON = false;
     boolean includeJVMMetrics = false;
     
@@ -46,6 +46,9 @@ public class JMXQuery {
         // Initialise
         JMXQuery query = new JMXQuery();
         query.parse(args);
+        
+        query.processName = "org.netbeans.Main";
+        //query.metrics.add(new JMXMetric("jvm.{name}.collectiontime", "java.lang:type=GarbageCollector,*", "CollectionTime", null));
         
         // Initialise JMX Connection
         if (query.processName != null) {
@@ -75,7 +78,7 @@ public class JMXQuery {
                 
             } else if (query.listType.equals(JMXQuery.MBEAN_LIST)) {
                 
-                ArrayList<JMXMetric> treeMetrics = query.connector.getMBeansTree(query.listQuery);
+                ArrayList<JMXMetric> treeMetrics = query.connector.getMBeansTree(query.listQuery, false);
                 int count = 0;
                 
                 if (query.outputJSON) {
@@ -85,7 +88,7 @@ public class JMXQuery {
                     } 
                     System.out.println("]");
                 } else {
-                    System.out.println("Listing JMX MBean Tree: \n");
+                    System.out.println("Listing JMX MBean Tree for query " + query.listQuery.toString() + ": \n");
                     for (JMXMetric metric : treeMetrics) {
                         System.out.println(metric.toString());
                         count++;
@@ -207,7 +210,19 @@ public class JMXQuery {
                     listType = args[++i];
                     
                     if (listType.equals(JMXQuery.MBEAN_LIST)) {
-                        listQuery = args[++i];
+                        
+                        String[] query = args[++i].split("/");
+                        String mbean = query[0];
+                        String attribute = null;
+                        String key = null;
+                        if (query.length > 1) {
+                            attribute = query[1];
+                        }
+                        if (query.length > 2) {
+                            key = query[2];
+                        }
+                        
+                        listQuery = new JMXMetric(null, mbean, attribute, key);
                     }
 
                 } else if (option.equals("-json")) {

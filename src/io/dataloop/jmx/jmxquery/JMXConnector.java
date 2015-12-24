@@ -178,56 +178,130 @@ public class JMXConnector {
     /**
      * Gets the full JMX MBean tree with all their attributes
      * 
-     * @param query         Query to filter tree on, use * to list everything
+     * @param metricQuery       Metric query to filter tree on, use *:* to list everything
+     * @param getValues         true = get values for each metric, false = only get metric paths
      * @return
      * @throws IOException 
      */
-    public ArrayList<JMXMetric> getMBeansTree(String query) throws IOException {
+    public ArrayList<JMXMetric> getMBeansTree(JMXMetric metricQuery, boolean getValues) throws IOException {
         
         ArrayList<JMXMetric> metrics = new ArrayList<JMXMetric>();
         
         try {
         
-            // Get list of MBeans for domain           
-            Set<ObjectInstance> instances = connection.queryMBeans(new ObjectName(query), null);
+            // Get list of MBeans from MBean Query           
+            Set<ObjectInstance> instances = connection.queryMBeans(new ObjectName(metricQuery.getmBeanName()), null);
             Iterator<ObjectInstance> iterator = instances.iterator();
                 
+            // Iterate through results
             while (iterator.hasNext()) {
+                
                 ObjectInstance instance = iterator.next(); 
+                JMXMetric attributeMetric = new JMXMetric(metricQuery.getMetric(),
+                                                          instance.getObjectName().toString(),
+                                                          metricQuery.getAttribute(), 
+                                                          metricQuery.getAttributeKey());
+                
                 // Get list of attributes for MBean
-                MBeanInfo info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));
-                      
+                MBeanInfo info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));                
                 MBeanAttributeInfo[] attributes = info.getAttributes();
                 for (MBeanAttributeInfo attribute : attributes) {
-                        
-                // Get keys if Composite Data Attribute
-                if (attribute.getType().contains("CompositeData")) {
-                        CompositeData cData = (CompositeData) connection.getAttribute(instance.getObjectName(), 
-                                attribute.getName());
-                        // Skip over null values
-                        if (cData == null) {
-                            JMXMetric metric = new JMXMetric(null, instance.getObjectName().toString(), attribute.getName(), null);
-                            metric.setAttributeType(attribute.getType());
-                            metrics.add(metric);
-                            continue;
-                        }
-
-                        Set<String> keys = cData.getCompositeType().keySet(); 
-                        for (String key : keys) {
-                            JMXMetric metric = new JMXMetric(null, instance.getObjectName().toString(), attribute.getName(), key);
-                            metrics.add(metric);
+                    
+                    // If attribute given in query, only return those attributes
+                    if ((metricQuery.getAttribute() != null) &&
+                            (! metricQuery.getAttribute().equals("*"))) {
+                             
+                        if (attribute.getName().equals(metricQuery.getAttribute())) {
+                            // Set attribute type and get the metric(s)
+                            attributeMetric.setAttributeType(attribute.getType());
+                            attributeMetric.setAttribute(attribute.getName());
+                            metrics.addAll(getAttribute(attributeMetric, getValues));
                         }
                     } else {
-                        JMXMetric metric = new JMXMetric(null, instance.getObjectName().toString(), attribute.getName(), null);
-                        metric.setAttributeType(attribute.getType());
-                        metrics.add(metric);
-                    }   
+                        
+                        // Get all attributes for MBean Query
+                        attributeMetric.setAttributeType(attribute.getType());
+                        attributeMetric.setAttribute(attribute.getName());
+                        metrics.addAll(getAttribute(attributeMetric, getValues));
+                    }
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error listing MBean Tree: " + Arrays.toString(e.getStackTrace()));    
+            System.err.println("Error listing MBean Tree for metric " + metricQuery.toString()
+                    + ": " + Arrays.toString(e.getStackTrace()));    
         }
         
         return metrics;
+    }
+    
+    /**
+     * Get an attribute for an MBean Query
+     * 
+     * @param attribute  The 
+     * @param getValues
+     * @return 
+     * @throws Exception
+     */
+    private ArrayList<JMXMetric> getAttribute(JMXMetric attribute, boolean getValues) throws Exception {
+        
+        ArrayList<JMXMetric> attributes = new ArrayList<JMXMetric>();
+        
+        // Get keys if Composite Data Attribute
+        if (attribute.getAttributeType().contains("CompositeData") || getValues) {
+            
+            // Get value
+            Object value = connection.getAttribute(new ObjectName(attribute.getmBeanName()), attribute.getAttribute());
+            
+            if (value instanceof CompositeData) {
+                
+                CompositeData cData = (CompositeData) value;
+                
+                if (attribute.getAttributeKey() != null) {
+                    
+                    try {
+                        
+                        value = cData.get(attribute.getAttributeKey());
+                    
+                        // Only get values that have the key
+                        JMXMetric foundAttribute = new JMXMetric(attribute.getMetric(), attribute.getmBeanName(),
+                                                     attribute.getAttribute(), attribute.getAttributeKey());
+                        if (getValues) {
+                            foundAttribute.setValue(value);
+                        }
+                        
+                        attributes.add(foundAttribute);
+                        
+                    } catch (InvalidKeyException e) {
+                        // Key doesn't exist so don't add to list
+                    }
+                    
+                } else {
+                    
+                    // List all the attribute keys
+                    Set<String> keys = cData.getCompositeType().keySet(); 
+                    for (String key : keys) {
+                            JMXMetric foundAttribute = new JMXMetric(attribute.getMetric(), attribute.getmBeanName(),
+                                                     attribute.getAttribute(), key);
+                            if (getValues) {
+                                foundAttribute.setValue(cData.get(key));
+                            }
+                            attributes.add(foundAttribute);
+                        }
+                }
+            } else {
+                
+                JMXMetric foundAttribute = new JMXMetric(attribute.getMetric(), attribute.getmBeanName(),
+                                                     attribute.getAttribute(), null);
+                
+                // Get the values for the attribute
+                if (getValues) {
+                    foundAttribute.setValue(value);
+                }
+                
+                attributes.add(foundAttribute);
+            }
+        }  
+        
+        return attributes;
     }
 }
