@@ -124,3 +124,10 @@ Building the Jar
 ----------------
 
 Simply run the ./build.sh, modifying the build parameters for your environment in the script. This will compile the code for Java 1.5 and build the Jar ready to run.
+
+License & Credits
+-----------------
+
+This tool was inspired by https://code.google.com/p/jmxquery/ but has been completely rewritten by David Gildeh (Dataloop.IO).
+
+It is licensed under Apache 2 License (http://www.apache.org/licenses/LICENSE-2.0)
