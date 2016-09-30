@@ -77,6 +77,11 @@ public class JMXConnector {
      * @throws IOException 
      */
     private void connect(String url, String username, String password) throws IOException {
+        
+        if (url == null) {
+            throw new IOException("Cannot connect to null URL. If connecting via -proc option, check the JVM process name is correct or running.");
+        }
+        
         JMXServiceURL jmxUrl = new JMXServiceURL(url);
 
         if (username != null) {

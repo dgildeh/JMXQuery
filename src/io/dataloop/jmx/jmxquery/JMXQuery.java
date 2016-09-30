@@ -42,89 +42,99 @@ public class JMXQuery {
      * @param args
      */
     public static void main(String[] args) throws Exception {
-
+                       
         // Initialise
         JMXQuery query = new JMXQuery();
         query.parse(args);
         
-        // Initialise JMX Connection
-        if (query.processName != null) {
-            query.connector = new JMXConnector(query.processName);
+        // List JVMs if -list jvms provided
+        if (query.list && query.listType.equals(JMXQuery.JVM_LIST)) {
+          
+            ArrayList<LocalJMXConnection> localJVMs = JMXTools.getLocalJVMs();
+                
+            if (query.outputJSON) {
+                System.out.println("[");
+                for (LocalJMXConnection jvm : localJVMs) {
+                    System.out.println(jvm.toJSON());
+                } 
+                System.out.println("]");
+            } else {
+                System.out.println("Listing Local JVMs: \n");
+                for (LocalJMXConnection jvm : localJVMs) {
+                    System.out.println(jvm.toString());
+                } 
+            }
+            
         } else {
-            query.connector = new JMXConnector(query.url, query.username, query.password);
-        }
-        
-        // Handle list commands
-        if (query.list) {
-            if (query.listType.equals(JMXQuery.JVM_LIST)) {
-                
-                ArrayList<LocalJMXConnection> localJVMs = JMXTools.getLocalJVMs();
-                
-                if (query.outputJSON) {
-                    System.out.println("[");
-                    for (LocalJMXConnection jvm : localJVMs) {
-                        System.out.println(jvm.toJSON());
-                    } 
-                    System.out.println("]");
+            
+            // Initialise JMX Connection
+            
+            try {
+                if (query.processName != null) {
+                    query.connector = new JMXConnector(query.processName);
                 } else {
-                    System.out.println("Listing Local JVMs: \n");
-                    for (LocalJMXConnection jvm : localJVMs) {
-                        System.out.println(jvm.toString());
-                    } 
+                    query.connector = new JMXConnector(query.url, query.username, query.password);
                 }
-                
-            } else if (query.listType.equals(JMXQuery.MBEAN_LIST)) {
-                
-                ArrayList<JMXMetric> treeMetrics = query.connector.listMetrics(query.listQuery);
+            } catch (IOException ioe) {
+                System.out.println("Error connecting to JMX: " + ioe.getMessage());
+                System.exit(2);
+            }
+                            
+            // Handle list commands
+            if (query.list) {
+                if (query.listType.equals(JMXQuery.MBEAN_LIST)) {
+
+                    ArrayList<JMXMetric> treeMetrics = query.connector.listMetrics(query.listQuery);
+                    int count = 0;
+
+                    if (query.outputJSON) {
+                        System.out.println("[");
+                        for (JMXMetric metric : treeMetrics) {
+                            System.out.println(metric.toJSON());
+                        } 
+                        System.out.println("]");
+                    } else {
+                        System.out.println("Listing JMX MBean Tree for query " + query.listQuery.toString() + ": \n");
+                        for (JMXMetric metric : treeMetrics) {
+                            System.out.println(metric.toString());
+                            count++;
+                        } 
+                        System.out.println("\n" + count + " Total");
+                    }
+
+                }
+            }
+
+            // Handle options
+            if (query.includeJVMMetrics) {
+                query.includeJVMStats();
+            }
+
+            // Get metrics and print out
+            ArrayList<JMXMetric> outputMetrics = query.connector.getMetrics(query.metrics);
+
+            if (query.outputJSON) {
+                System.out.println("[");
                 int count = 0;
-                
-                if (query.outputJSON) {
-                    System.out.println("[");
-                    for (JMXMetric metric : treeMetrics) {
-                        System.out.println(metric.toJSON());
-                    } 
-                    System.out.println("]");
-                } else {
-                    System.out.println("Listing JMX MBean Tree for query " + query.listQuery.toString() + ": \n");
-                    for (JMXMetric metric : treeMetrics) {
-                        System.out.println(metric.toString());
+                for (JMXMetric metric : outputMetrics) {
+                    if (count > 0) {
+                        System.out.print(", \n" + metric.toJSON());
+                    } else {
                         count++;
-                    } 
-                    System.out.println("\n" + count + " Total");
+                        System.out.print(metric.toJSON());
+                    }
+
                 }
-                
-            }
-        }
-        
-        // Handle options
-        if (query.includeJVMMetrics) {
-            query.includeJVMStats();
-        }
-        
-        // Get metrics and print out
-        ArrayList<JMXMetric> outputMetrics = query.connector.getMetrics(query.metrics);
-       
-        if (query.outputJSON) {
-            System.out.println("[");
-            int count = 0;
-            for (JMXMetric metric : outputMetrics) {
-                if (count > 0) {
-                    System.out.print(", \n" + metric.toJSON());
-                } else {
-                    count++;
-                    System.out.print(metric.toJSON());
+                System.out.println("]");
+            } else {
+                for (JMXMetric metric : outputMetrics) {
+                    System.out.println(metric.toString());
                 }
-                
             }
-            System.out.println("]");
-        } else {
-            for (JMXMetric metric : outputMetrics) {
-                System.out.println(metric.toString());
-            }
+
+            // Disconnect from JMX Cleanly
+            query.connector.disconnect();
         }
-        
-        // Disconnect from JMX Cleanly
-        query.connector.disconnect();
     }
 
     /**
@@ -189,7 +199,7 @@ public class JMXQuery {
                 if (option.equals("-help")) {
                     
                     printHelp(System.out);
-                    System.exit(3);
+                    System.exit(0);
                     
                 } else if (option.equals("-url")) {
                     url = args[++i];
@@ -236,7 +246,7 @@ public class JMXQuery {
                 }
                 
                 // Check that required parameters are given
-                if (url == null && processName == null) {
+                if (url == null && processName == null && !listType.equals(JMXQuery.JVM_LIST)) {
                     throw new Exception("Required options not specified");
                 }
             }
