@@ -5,3 +5,4 @@ dist/
 nbproject/
 nbbuild.xml
 build.xml
+lib/
