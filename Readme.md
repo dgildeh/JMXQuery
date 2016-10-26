@@ -54,15 +54,15 @@ Example Usage
 
 List all metrics:
 
-`java -jar jmxquery.jar service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -list mbeans '*:*'`
+`java -jar jmxquery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -list mbeans '*:*'`
 
 To filter on a particular domain so you only see the JMX metrics available under that (i.e. java.lang) you can use the following command:
 
-`java -jar jmxquery.jar service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -list mbeans java.lang:*`
+`java -jar jmxquery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -list mbeans java.lang:*`
 
 If you want to filter on attribute name you could use the following query:
 
-`java -jar jmxquery.jar service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -list mbeans '*:*/HeapMemoryUsage'`
+`java -jar jmxquery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -list mbeans '*:*/HeapMemoryUsage'`
 
 This will list any MBean attributes that have that attribue name in the JVM.
 
@@ -87,7 +87,7 @@ when the values out outputted by the tool.
 
 This example will list all the collectiontime and collectioncount attribute values for all the GarbageCollector processes running in the JVM:
 
-`java -jar jmxquery.jar service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -metrics "jvm.gc.[name].collectiontime=java.lang:type=GarbageCollector,*/CollectionTime;
+`java -jar jmxquery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -metrics "jvm.gc.[name].collectiontime=java.lang:type=GarbageCollector,*/CollectionTime;
 jvm.gc.[name].collectioncount=java.lang:type=GarbageCollector,*/CollectionCount"`
    
 This will output the following:
