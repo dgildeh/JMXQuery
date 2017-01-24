@@ -153,11 +153,14 @@ public class JMXMetric {
      * @return  JSON String
      */
     public String toJSON() {
+
+        String beanName = this.mBeanName.replace("\"", "\\\"");
+
         String json = "{";
         if (this.metric != null) {
             json += "\"metricName\" : \"" + this.metric + "\"";
         }
-        json += ", \"mBeanName\" : \"" + this.mBeanName + "\"";
+        json += ", \"mBeanName\" : \"" + beanName + "\"";
         json += ", \"attribute\" : \"" + this.attribute + "\"";
         if (this.attributeKey != null) {
             json += ", \"attributeKey\" : \"" + this.attributeKey + "\"";
@@ -169,7 +172,10 @@ public class JMXMetric {
             json += ", \"value\" : \"" + this.value.toString() + "\"";
         }
         json += "}";
-        
+
+//        Gson gson = new Gson();
+//        String json = gson.toJson(this);
+
         return json;
     }
 }
