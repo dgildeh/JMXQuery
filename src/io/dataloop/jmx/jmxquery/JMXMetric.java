@@ -84,16 +84,36 @@ public class JMXMetric {
      * {metric}={mBeanName}/{attribute}/{attributeKey};
      * 
      * E.g. jvm.memory.heap.used=java.lang:type=Memory/HeapMemoryUsage/used;
+     * Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name="jdbc/storage"/numIdle;
      * 
      * @param metricQuery 
      */
     private void parseMetricQuery(String metricQuery) throws ParseError {
         
         try {
-            this.metric = metricQuery.split("=")[0];
-            String query = metricQuery.substring(this.metric.length() + 1);
-            String[] parts = query.split("/");
-            this.mBeanName = parts[0];
+            String query = metricQuery;
+
+            int firstEquals = query.indexOf('=');
+            this.metric = query.substring(0, firstEquals);
+            query = query.substring(firstEquals + 1);
+
+            int firstColon = query.indexOf(':');
+            String beanName = query.substring(0, firstColon + 1);
+            query = query.substring(firstColon + 1);
+
+            // This finds all commas which are not inside double quotes.
+            String[] paths = query.split("(?!\\B\"[^\"]*),(?![^\"]*\"\\B)");
+            for (int i=0; i < paths.length - 1; i++) {
+                beanName += paths[i] + ",";
+            }
+
+            query = paths[paths.length - 1];
+            String[] parts = query.split("(?!\\B\"[^\"]*)/(?![^\"]*\"\\B)");
+
+//            String[] parts = query.split("/");
+            beanName += parts[0];
+            this.mBeanName = beanName;
+
             this.attribute = parts[1];
             if (parts.length > 2) {
                 this.attributeKey = parts[2];
