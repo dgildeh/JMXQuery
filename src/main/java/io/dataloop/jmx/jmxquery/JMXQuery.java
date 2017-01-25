@@ -144,9 +144,9 @@ public class JMXQuery {
     private void includeJVMStats() {
         
         // Class Loading
-        metrics.add(new JMXMetric("jvm.classloading.loadedclasscount", "java.lang:type=ClassLoading", "LoadedClassCount", null));
-        metrics.add(new JMXMetric("jvm.classloading.unloadedclasscount", "java.lang:type=ClassLoading", "UnloadedClassCount", null));
-        metrics.add(new JMXMetric("jvm.classloading.totalloadedclasscount", "java.lang:type=ClassLoading", "TotalLoadedClassCount", null));
+        metrics.add(new JMXMetric("jvm.classloading.loaded_class_count", "java.lang:type=ClassLoading", "LoadedClassCount", null));
+        metrics.add(new JMXMetric("jvm.classloading.unloaded_class_count", "java.lang:type=ClassLoading", "UnloadedClassCount", null));
+        metrics.add(new JMXMetric("jvm.classloading.total_loaded_class_count", "java.lang:type=ClassLoading", "TotalLoadedClassCount", null));
         
         // Garbage Collection
         metrics.add(new JMXMetric("jvm.gc.[name].collectiontime", "java.lang:type=GarbageCollector,*", "CollectionTime", null));
@@ -163,26 +163,26 @@ public class JMXQuery {
         metrics.add(new JMXMetric("jvm.memory.nonheap.used", "java.lang:type=Memory", "NonHeapMemoryUsage", "used"));
 
         // Operating System
-        metrics.add(new JMXMetric("jvm.os.OpenFileDescriptorCount", "java.lang:type=OperatingSystem", "OpenFileDescriptorCount", null));
-        metrics.add(new JMXMetric("jvm.os.MaxFileDescriptorCount", "java.lang:type=OperatingSystem", "MaxFileDescriptorCount", null));
-        metrics.add(new JMXMetric("jvm.os.CommittedVirtualMemorySize", "java.lang:type=OperatingSystem", "CommittedVirtualMemorySize", null));
-        metrics.add(new JMXMetric("jvm.os.TotalSwapSpaceSize", "java.lang:type=OperatingSystem", "TotalSwapSpaceSize", null));
-        metrics.add(new JMXMetric("jvm.os.FreeSwapSpaceSize", "java.lang:type=OperatingSystem", "FreeSwapSpaceSize", null));
-        metrics.add(new JMXMetric("jvm.os.ProcessCpuTime", "java.lang:type=OperatingSystem", "ProcessCpuTime", null));
-        metrics.add(new JMXMetric("jvm.os.FreePhysicalMemorySize", "java.lang:type=OperatingSystem", "FreePhysicalMemorySize", null));
-        metrics.add(new JMXMetric("jvm.os.TotalPhysicalMemorySize", "java.lang:type=OperatingSystem", "TotalPhysicalMemorySize", null));
-        metrics.add(new JMXMetric("jvm.os.SystemCpuLoad", "java.lang:type=OperatingSystem", "SystemCpuLoad", null));
-        metrics.add(new JMXMetric("jvm.os.ProcessCpuLoad", "java.lang:type=OperatingSystem", "ProcessCpuLoad", null));
-        metrics.add(new JMXMetric("jvm.os.SystemLoadAverage", "java.lang:type=OperatingSystem", "SystemLoadAverage", null));
+        metrics.add(new JMXMetric("jvm.os.open_fd_count", "java.lang:type=OperatingSystem", "OpenFileDescriptorCount", null));
+        metrics.add(new JMXMetric("jvm.os.max_fd_count", "java.lang:type=OperatingSystem", "MaxFileDescriptorCount", null));
+        metrics.add(new JMXMetric("jvm.os.committed_vm_size", "java.lang:type=OperatingSystem", "CommittedVirtualMemorySize", null));
+        metrics.add(new JMXMetric("jvm.os.total_swap_size", "java.lang:type=OperatingSystem", "TotalSwapSpaceSize", null));
+        metrics.add(new JMXMetric("jvm.os.free_swap_size", "java.lang:type=OperatingSystem", "FreeSwapSpaceSize", null));
+        metrics.add(new JMXMetric("jvm.os.process_cpu_time", "java.lang:type=OperatingSystem", "ProcessCpuTime", null));
+        metrics.add(new JMXMetric("jvm.os.free_phys_mem_size", "java.lang:type=OperatingSystem", "FreePhysicalMemorySize", null));
+        metrics.add(new JMXMetric("jvm.os.total_phys_mem_size", "java.lang:type=OperatingSystem", "TotalPhysicalMemorySize", null));
+        metrics.add(new JMXMetric("jvm.os.system_cpu_load", "java.lang:type=OperatingSystem", "SystemCpuLoad", null));
+        metrics.add(new JMXMetric("jvm.os.process_cpu_load", "java.lang:type=OperatingSystem", "ProcessCpuLoad", null));
+        metrics.add(new JMXMetric("jvm.os.system_load_avg", "java.lang:type=OperatingSystem", "SystemLoadAverage", null));
         
         // Runtime
-        metrics.add(new JMXMetric("jvm.runtime.Uptime", "java.lang:type=Runtime", "Uptime", null));
+        metrics.add(new JMXMetric("jvm.runtime.uptime", "java.lang:type=Runtime", "Uptime", null));
 
         // Threading   
-        metrics.add(new JMXMetric("jvm.threading.threadcount", "java.lang:type=Threading", "ThreadCount", null));
-        metrics.add(new JMXMetric("jvm.threading.peakthreadcount", "java.lang:type=Threading", "PeakThreadCount", null));
-        metrics.add(new JMXMetric("jvm.threading.daemonthreadcount", "java.lang:type=Threading", "DaemonThreadCount", null));
-        metrics.add(new JMXMetric("jvm.threading.totalstartedthreadcount", "java.lang:type=Threading", "TotalStartedThreadCount", null));
+        metrics.add(new JMXMetric("jvm.threading.thread_count", "java.lang:type=Threading", "ThreadCount", null));
+        metrics.add(new JMXMetric("jvm.threading.peak_thread_count", "java.lang:type=Threading", "PeakThreadCount", null));
+        metrics.add(new JMXMetric("jvm.threading.daemon_thread_count", "java.lang:type=Threading", "DaemonThreadCount", null));
+        metrics.add(new JMXMetric("jvm.threading.total_started_thread_count", "java.lang:type=Threading", "TotalStartedThreadCount", null));
     }
     
     /**

@@ -6,3 +6,7 @@ nbproject/
 nbbuild.xml
 build.xml
 lib/
+out/
+target/
+.idea/
+*.iml
