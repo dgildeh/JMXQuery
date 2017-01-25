@@ -183,6 +183,12 @@ public class JMXQuery {
         metrics.add(new JMXMetric("jvm.threading.peak_thread_count", "java.lang:type=Threading", "PeakThreadCount", null));
         metrics.add(new JMXMetric("jvm.threading.daemon_thread_count", "java.lang:type=Threading", "DaemonThreadCount", null));
         metrics.add(new JMXMetric("jvm.threading.total_started_thread_count", "java.lang:type=Threading", "TotalStartedThreadCount", null));
+
+        // Memory Pools
+        metrics.add(new JMXMetric("jvm.memory.[name].committed", "java.lang:type=MemoryPool,*", "Usage", "committed"));
+        metrics.add(new JMXMetric("jvm.memory.[name].init", "java.lang:type=MemoryPool,*", "Usage", "init"));
+        metrics.add(new JMXMetric("jvm.memory.[name].max", "java.lang:type=MemoryPool,*", "Usage", "max"));
+        metrics.add(new JMXMetric("jvm.memory.[name].used", "java.lang:type=MemoryPool,*", "Usage", "used"));
     }
     
     /**
