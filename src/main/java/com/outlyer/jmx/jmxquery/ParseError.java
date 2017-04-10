@@ -1,4 +1,4 @@
-package io.dataloop.jmx.jmxquery;
+package com.outlyer.jmx.jmxquery;
 
 public class ParseError extends Exception {
 

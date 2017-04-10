@@ -1,4 +1,4 @@
-package io.dataloop.jmx.jmxquery.tools;
+package com.outlyer.jmx.jmxquery.tools;
 
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;

@@ -1,6 +1,6 @@
-package io.dataloop.jmx.jmxquery;
+package com.outlyer.jmx.jmxquery;
 
-import io.dataloop.jmx.jmxquery.tools.JMXTools;
+import com.outlyer.jmx.jmxquery.tools.JMXTools;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;

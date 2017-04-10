@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.dataloop</groupId>
+    <groupId>com.outlyer</groupId>
     <artifactId>JMXQuery</artifactId>
-    <version>0.1.5</version>
+    <version>0.1.6</version>
     <packaging>jar</packaging>
 
-    <name>Dataloop JMXQuery tool</name>
-    <url>http://www.dataloop.io</url>
+    <name>Outlyer JMXQuery tool</name>
+    <url>https://www.outlyer.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -42,7 +42,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.dataloop.jmx.jmxquery.JMXQuery</mainClass>
+                            <mainClass>com.outlyer.jmx.jmxquery.JMXQuery</mainClass>
                         </manifest>
                     </archive>
                     <includes>

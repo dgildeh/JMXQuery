@@ -1,7 +1,7 @@
-package io.dataloop.jmx.jmxquery;
+package com.outlyer.jmx.jmxquery;
 
-import io.dataloop.jmx.jmxquery.tools.JMXTools;
-import io.dataloop.jmx.jmxquery.tools.LocalJMXConnection;
+import com.outlyer.jmx.jmxquery.tools.JMXTools;
+import com.outlyer.jmx.jmxquery.tools.LocalJMXConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -265,7 +265,7 @@ public class JMXQuery {
      * Prints Help Text
      */
     private void printHelp(PrintStream out) {
-        InputStream is = JMXQuery.class.getClassLoader().getResourceAsStream("io/dataloop/jmx/jmxquery/HELP");
+        InputStream is = JMXQuery.class.getClassLoader().getResourceAsStream("com/outlyer/jmx/jmxquery/HELP");
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         try {
             while (true) {

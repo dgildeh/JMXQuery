@@ -1,4 +1,4 @@
-package io.dataloop.jmx.jmxquery;
+package com.outlyer.jmx.jmxquery;
 
 /**
  * Stores parameters for a single metric query passed into command line in format:
