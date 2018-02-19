@@ -8,7 +8,7 @@ import java.util.Properties;
 
 /**
  *
- * @author dgildeh
+ * @author David Gildeh (www.outlyer.com)
  */
 public class LocalJMXConnection {
     

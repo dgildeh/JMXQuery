@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
     Python wrapper for JMXQuery.jar
@@ -26,12 +26,12 @@ def getMetrics():
     output = "OK | "
     for metric in metrics:
         output += metric['metricName'] + "=" + metric['value'] + ";;;; "
-    print output
+    print(output)
   
 def listMBeans():
     query = "java.lang:type=MemoryPool,*/Usage/"
     command = [JDK_PATH, '-jar', JAR_PATH, '-url', 'service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi', "-list", "mbeans", query]
     output = subprocess.check_output(command)
-    print output
+    print(output)
 
 listMBeans()

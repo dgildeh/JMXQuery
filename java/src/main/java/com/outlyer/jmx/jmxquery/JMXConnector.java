@@ -26,7 +26,7 @@ import javax.management.remote.JMXServiceURL;
  * Connection class with utility functions for querying the JVM 
  * JMX interface for values
  * 
- * @author dgildeh
+ * @author David Gildeh (www.outlyer.com)
  */
 public class JMXConnector {
     

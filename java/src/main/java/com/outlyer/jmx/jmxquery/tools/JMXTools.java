@@ -11,7 +11,7 @@ import java.util.List;
  * Utility tools for listing and connecting to local JVMs. Note this will use
  * the tools.jar in JDK, so will require JDK installed on the host machine.
  * 
- * @author dgildeh
+ * @author David Gildeh (www.outlyer.com)
  */
 public class JMXTools {
     

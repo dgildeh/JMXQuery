@@ -7,7 +7,7 @@ package com.outlyer.jmx.jmxquery;
  * 
  * E.g. jvm.memory.heap.used=java.lang:type=Memory/HeapMemoryUsage/used
  * 
- * @author dgildeh
+ * @author David Gildeh (www.outlyer.com)
  */
 public class JMXMetric {
     

@@ -14,7 +14,7 @@ import java.util.ArrayList;
  *
  * JMXQuery is used for local or remote request of JMX attributes
  *
- * @author David Gildeh (www.dataloop.io)
+ * @author David Gildeh (www.outlyer.com)
  *
  */
 public class JMXQuery {

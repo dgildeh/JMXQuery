@@ -1,7 +1,7 @@
-package io.dataloop.jmx.jmxquery.tests;
+package com.outlyer.jmx.jmxquery.tests;
 
-import io.dataloop.jmx.jmxquery.tools.JMXTools;
-import io.dataloop.jmx.jmxquery.tools.LocalJMXConnection;
+import com.outlyer.jmx.jmxquery.tools.JMXTools;
+import com.outlyer.jmx.jmxquery.tools.LocalJMXConnection;
 import java.util.ArrayList;
 import org.junit.After;
 import org.junit.AfterClass;

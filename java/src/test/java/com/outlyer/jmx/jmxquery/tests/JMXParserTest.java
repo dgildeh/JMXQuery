@@ -1,22 +1,17 @@
-package io.dataloop.jmx.jmxquery.tests;
+package com.outlyer.jmx.jmxquery.tests;
 
-import io.dataloop.jmx.jmxquery.JMXMetric;
-import io.dataloop.jmx.jmxquery.ParseError;
-import io.dataloop.jmx.jmxquery.tools.JMXTools;
-import io.dataloop.jmx.jmxquery.tools.LocalJMXConnection;
+import com.outlyer.jmx.jmxquery.JMXMetric;
+import com.outlyer.jmx.jmxquery.ParseError;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.ArrayList;
-
 import static org.junit.Assert.*;
 
 /**
- * Created by tradel on 1/24/17.
+ * @author dgildeh
  */
 
 public class JMXParserTest {
