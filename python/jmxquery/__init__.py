@@ -67,6 +67,16 @@ class JMXQuery:
 
         return query
 
+    def __eq__(self, other):
+        """
+        TODO - We want to check if two JMXQuerys are the same to ensure the original settings are copied
+        over in the results
+
+        :param other:
+        :return:
+        """
+        pass
+
 class JMXConnection(object):
     """
     The main class that connects to the JMX endpoint via a local JAR to run queries
