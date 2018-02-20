@@ -36,18 +36,16 @@ public class JMXParserTest {
 
     @Test
     public void testSlashesInsidePath() throws ParseError {
-        String q = "foo.bar=Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name=\"jdbc/storage\"/numIdle";
+        String q = "Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name=\"jdbc/storage\"/numIdle";
         JMXMetric m = new JMXMetric(q);
-        Assert.assertEquals("foo.bar", m.getMetric());
         Assert.assertEquals("Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name=\"jdbc/storage\"", m.getmBeanName());
         Assert.assertEquals("numIdle", m.getAttribute());
     }
 
     @Test
     public void testAttributeKey() throws ParseError {
-        String q = "jvm.memory.heap.used=java.lang:type=Memory/HeapMemoryUsage/used";
+        String q = "java.lang:type=Memory/HeapMemoryUsage/used";
         JMXMetric m = new JMXMetric(q);
-        Assert.assertEquals("jvm.memory.heap.used", m.getMetric());
         Assert.assertEquals("java.lang:type=Memory", m.getmBeanName());
         Assert.assertEquals("HeapMemoryUsage", m.getAttribute());
         Assert.assertEquals("used", m.getAttributeKey());

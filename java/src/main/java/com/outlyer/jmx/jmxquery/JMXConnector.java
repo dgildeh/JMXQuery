@@ -9,16 +9,14 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.InvalidKeyException;
+import javax.management.openmbean.TabularDataSupport;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
@@ -117,33 +115,25 @@ public class JMXConnector {
     public ArrayList<JMXMetric> getMetrics(ArrayList<JMXMetric> metricsList) throws IOException {
         ArrayList<JMXMetric> newMetricList = new ArrayList<JMXMetric>();
         for (JMXMetric metric : metricsList) {
-            ArrayList<JMXMetric> fetchedMetrics = getMetrics(metric, true);
+            ArrayList<JMXMetric> fetchedMetrics = getMetrics(metric);
             newMetricList.addAll(fetchedMetrics);
         }  
         return newMetricList;
-    } 
-    
-    /**
-     * List all the metrics for a particular query
-     * 
-     * @param metricQuery   Search query to filter on, *:* will return everything
-     * @return              JMX Metrics that match search query
-     */
-    public ArrayList<JMXMetric> listMetrics(JMXMetric metricQuery) throws IOException {
-        return getMetrics(metricQuery, false);
     }
     
     /**
      * Main function to query and get metrics from JMX
      * 
      * @param metricQuery       Metric query to filter on, use *:* to list everything
-     * @param getValues         true = get values for each metric, false = only get metric paths
      * @return
      * @throws IOException 
      */
-    private ArrayList<JMXMetric> getMetrics(JMXMetric metricQuery, boolean getValues) throws IOException {
+    private ArrayList<JMXMetric> getMetrics(JMXMetric metricQuery) throws IOException {
         
         ArrayList<JMXMetric> metrics = new ArrayList<JMXMetric>();
+        
+        MBeanInfo info = null;
+        JMXMetric attributeMetric = null;
         
         try {
         
@@ -154,170 +144,115 @@ public class JMXConnector {
             // Iterate through results
             while (iterator.hasNext()) {
                 
-                ObjectInstance instance = iterator.next(); 
-                JMXMetric attributeMetric = new JMXMetric(metricQuery.getMetric(),
-                                                          instance.getObjectName().toString(),
-                                                          metricQuery.getAttribute(), 
-                                                          metricQuery.getAttributeKey());
+                ObjectInstance instance = iterator.next();
                 
-                // Get list of attributes for MBean
-                MBeanInfo info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));                
-                MBeanAttributeInfo[] attributes = info.getAttributes();
-                for (MBeanAttributeInfo attribute : attributes) {
+                try {
+
+                    // Get list of attributes for MBean
+                    info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));                
+                    MBeanAttributeInfo[] attributes = info.getAttributes();
+                    for (MBeanAttributeInfo attribute : attributes) {
+                        
+                        attributeMetric= new JMXMetric(instance.getObjectName().toString(),
+                                                        attribute.getName(), 
+                                                        null);
                     
-                    // If attribute given in query, only return those attributes
-                    if ((metricQuery.getAttribute() != null) &&
-                            (! metricQuery.getAttribute().equals("*"))) {
-                             
-                        if (attribute.getName().equals(metricQuery.getAttribute())) {
-                            // Set attribute type and get the metric(s)
+                        // If attribute given in query, only return those attributes
+                        if ((metricQuery.getAttribute() != null) &&
+                                (! metricQuery.getAttribute().equals("*"))) {
+
+                            if (attribute.getName().equals(metricQuery.getAttribute())) {
+                                // Set attribute type and get the metric(s)
+                                attributeMetric.setAttributeType(attribute.getType());
+                                attributeMetric.setAttribute(attribute.getName());
+                                metrics.addAll(getAttributes(attributeMetric));
+                            }
+                        } else {
+
+                            // Get all attributes for MBean Query
                             attributeMetric.setAttributeType(attribute.getType());
                             attributeMetric.setAttribute(attribute.getName());
-                            metrics.addAll(getAttribute(attributeMetric, getValues));
+                            metrics.addAll(getAttributes(attributeMetric));
                         }
-                    } else {
-                        
-                        // Get all attributes for MBean Query
-                        attributeMetric.setAttributeType(attribute.getType());
-                        attributeMetric.setAttribute(attribute.getName());
-                        metrics.addAll(getAttribute(attributeMetric, getValues));
                     }
-                }
+                } catch (NullPointerException e) {
+                    attributeMetric.setAttributeType(null);
+                    attributeMetric.setValue(null);
+                    metrics.add(attributeMetric);
+                }   
             }
         } catch (Exception e) {
-            System.err.println("Error listing MBean Tree for metric " + metricQuery.toString()
-                    + ": " + Arrays.toString(e.getStackTrace()));    
+            System.err.println("Error listing MBean Tree for query " + metricQuery.toString() 
+                    + " getting metric " + attributeMetric.toString());
+                   // + ": " + Arrays.toString(e.getStackTrace()));    
         }
         
         return metrics;
     }
     
     /**
-     * Get an attribute for an MBean Query
+     * Expand an attribute to get all keys and values for it
      * 
-     * @param attribute  The 
-     * @param getValues
-     * @return 
-     * @throws Exception
+     * @param attribute     The attribute to expand
+     * @return              A list of all the attribute keys/values
      */
-    private ArrayList<JMXMetric> getAttribute(JMXMetric attribute, boolean getValues) throws Exception {
-        
-        ArrayList<JMXMetric> attributes = new ArrayList<JMXMetric>();
-        
-        // Format attribute metric name if needed
-        formatMetricName(attribute);
-        
-        // Get keys if Composite Data Attribute
-        if (attribute.getAttributeType().contains("CompositeData") || getValues) {
-            
-            // Get value
-            Object value = connection.getAttribute(new ObjectName(attribute.getmBeanName()), attribute.getAttribute());
-            
-            if (value instanceof CompositeData) {
-                
-                CompositeData cData = (CompositeData) value;
-                
-                if (attribute.getAttributeKey() != null) {
-                    
-                    try {
-                        
-                        value = cData.get(attribute.getAttributeKey());
-                    
-                        // Only get values that have the key
-                        JMXMetric foundAttribute = new JMXMetric(attribute.getMetric(), attribute.getmBeanName(),
-                                                     attribute.getAttribute(), attribute.getAttributeKey());
-                        if (getValues) {
-                            foundAttribute.setValue(value);
-                        }
-                        
-                        attributes.add(foundAttribute);
-                        
-                    } catch (InvalidKeyException e) {
-                        // Key doesn't exist so don't add to list
-                    }
-                    
-                } else {
-                    
-                    // List all the attribute keys
-                    Set<String> keys = cData.getCompositeType().keySet(); 
-                    for (String key : keys) {
-                            JMXMetric foundAttribute = new JMXMetric(attribute.getMetric(), attribute.getmBeanName(),
-                                                     attribute.getAttribute(), key);
-                            if (getValues) {
-                                foundAttribute.setValue(cData.get(key));
-                            }
-                            attributes.add(foundAttribute);
-                        }
-                }
-            } else {
-                
-                JMXMetric foundAttribute = new JMXMetric(attribute.getMetric(), attribute.getmBeanName(),
-                                                     attribute.getAttribute(), null);
-                
-                // Get the values for the attribute
-                if (getValues) {
-                    foundAttribute.setValue(value);
-                }
-                
-                attributes.add(foundAttribute);
-            }
-        } else {
-            
-                // Just list the metric attributes
-                
-                JMXMetric foundAttribute = new JMXMetric(attribute.getMetric(), attribute.getmBeanName(),
-                                                     attribute.getAttribute(), null);
-                
-                attributes.add(foundAttribute);      
-        }
-        
-        return attributes;
+    private ArrayList<JMXMetric> getAttributes(JMXMetric attribute) {
+        return getAttributes(attribute, null);
     }
     
     /**
-     * Replaces any [] tokens in metric names with the value from the MBean name if
-     * present otherwise will not replace. 
+     * Recursive function to expand Attributes and get any values for them
      * 
-     * For example:
-     * 
-     * jvm.gc.[name].collectioncount = java.lang:type=GarbageCollector,name=PS Scavenge/CollectionTime
-     * 
-     * Will update [name] to: jvm.gc.PS_Scavenge.collectioncount
-     * 
-     * @param metric    The metric to update name for
+     * @param attribute     The top attribute to expand values for
+     * @param value         Null if calling, used to recursively get values 
+     * @return              A list of all the attributes and values for the attribute
      */
-    private void formatMetricName(JMXMetric metric) {
+    private ArrayList<JMXMetric> getAttributes(JMXMetric attribute, Object value) {
         
-        // Check if variable in name
-        if (metric.getMetric() != null && metric.getMetric().contains("[")) {
-            
-            Pattern pattern = Pattern.compile("\\[(.+?)\\]");
-            Matcher matcher = pattern.matcher(metric.getMetric());
-            Hashtable<String, String> replacements;
-            
-            // Populate replacements from MBean ObjectName
-            try {
-                ObjectName name = new ObjectName(metric.getmBeanName());
-                replacements = name.getKeyPropertyList();
-            } catch (MalformedObjectNameException e) {
-                return;
+        ArrayList<JMXMetric> attributes = new ArrayList<JMXMetric>();
+        
+        if (value == null) {
+            // First time running so get value from JMX connection
+            try { 
+               value = connection.getAttribute(new ObjectName(attribute.getmBeanName()), attribute.getAttribute()); 
+            } catch(Exception e) {
+                // Do nothing - these are thrown if value is UnAvailable
             }
-            
-            StringBuilder builder = new StringBuilder();
-            int i = 0;
-            while (matcher.find()) {
-                String replacement = replacements.get(matcher.group(1));
-                builder.append(metric.getMetric().substring(i, matcher.start()));
-                if (replacement == null) {
-                    builder.append(matcher.group(0));
-                    i = matcher.end();
-                } else {
-                    builder.append(replacement.replaceAll(" ", "_").toLowerCase());
-                    i = matcher.end();
-                }
-            }
-            builder.append(metric.getMetric().substring(i, metric.getMetric().length()));
-            metric.setMetric(builder.toString());
         }
+        
+        if (value instanceof CompositeData) {
+            CompositeData cData = (CompositeData) value;
+            // If attribute has key specified, only get that otherwise get all keys
+            if (attribute.getAttributeKey() != null) {
+                try {
+                    JMXMetric foundKey = new JMXMetric(attribute.getmBeanName(),
+                                                attribute.getAttribute(),
+                                                attribute.getAttributeKey());
+                    foundKey.setAttributeType(cData.get(attribute.getAttributeKey()));
+                    attributes.addAll(getAttributes(foundKey, cData.get(attribute.getAttributeKey())));                    
+                } catch (InvalidKeyException e) {
+                    // Key doesn't exist so don't add to list
+                }    
+            } else {
+                // List all the attribute keys
+                Set<String> keys = cData.getCompositeType().keySet(); 
+                for (String key : keys) {
+                    JMXMetric foundKey = new JMXMetric(attribute.getmBeanName(),
+                                             attribute.getAttribute(), key);
+                    foundKey.setAttributeType(cData.get(key));
+                    attributes.addAll(getAttributes(foundKey, cData.get(key)));
+                }
+            }    
+        } else if (value instanceof TabularDataSupport) {
+            // Ignore getting values for these types
+            attribute.setAttributeType(value);
+            attributes.add(attribute);
+        } else {
+            attribute.setAttributeType(value);
+            attribute.setValue(value);
+            attributes.add(attribute);
+        }
+        
+        return attributes;
     }
 }

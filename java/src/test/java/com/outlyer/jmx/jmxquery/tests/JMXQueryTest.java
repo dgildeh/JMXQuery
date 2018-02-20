@@ -45,20 +45,20 @@ public class JMXQueryTest {
     public void testLocalProcessConnection() throws Exception {
         
         JMXQuery.main(new String[]{"-proc", "org.netbeans.Main", "-metrics",
-                        "jvm.test.classes=java.lang:type=ClassLoading/LoadedClassCount;"
-                      + "jvm.test.mem.max=java.lang:type=Memory/HeapMemoryUsage/max"});
+                        "java.lang:type=ClassLoading/LoadedClassCount;"
+                      + "java.lang:type=Memory/HeapMemoryUsage/max"});
     }
     
     @Test
     public void testUrlConnection() throws Exception {
         
         String url = JMXTools.getLocalJMXConnection("org.netbeans.Main");
-        System.out.println(url);
+        System.out.println("Connection URL: " + url);
         
         JMXQuery.main(new String[]{"-url", url, 
                         "-metrics",
-                        "jvm.test.classes=java.lang:type=ClassLoading/LoadedClassCount;"
-                      + "jvm.test.mem.max=java.lang:type=Memory/HeapMemoryUsage/max"});
+                        "java.lang:type=ClassLoading/LoadedClassCount;"
+                      + "java.lang:type=Memory/HeapMemoryUsage/max"});
     }
     
     @Test

@@ -1,5 +1,9 @@
 package com.outlyer.jmx.jmxquery;
 
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularDataSupport;
+
 /**
  * Stores parameters for a single metric query passed into command line in format:
  * 
@@ -11,15 +15,13 @@ package com.outlyer.jmx.jmxquery;
  */
 public class JMXMetric {
     
-    private String metric;
     private String mBeanName;
     private String attribute;
     private String attributeKey = null;
     private String attributeType = null;
     private Object value = null;
     
-    public JMXMetric(String metric, String mBeanName, String attribute, String attributeKey) {
-        this.metric = metric;
+    public JMXMetric(String mBeanName, String attribute, String attributeKey) {
         this.mBeanName = mBeanName;
         this.attribute = attribute;
         this.attributeKey = attributeKey;
@@ -27,14 +29,6 @@ public class JMXMetric {
     
     public JMXMetric(String metricQuery) throws ParseError {
         this.parseMetricQuery(metricQuery);
-    }
-
-    public String getMetric() {
-        return metric;
-    }
-
-    public void setMetric(String metric) {
-        this.metric = metric;
     }
 
     public String getmBeanName() {
@@ -73,15 +67,41 @@ public class JMXMetric {
         return attributeType;
     }
 
-    public void setAttributeType(String attributeType) {
-        this.attributeType = attributeType;
+    /**
+     * Will set type based on class instance of value
+     * 
+     * @param value     The value to get the type for
+     */
+    public void setAttributeType(Object value) {
+        
+        if (value instanceof String) {
+            this.attributeType = "String";
+        } else if (value == null) {
+            this.attributeType = "Null";
+        } else if (value instanceof CompositeData) {
+            this.attributeType = "CompositeData";
+        } else if (value instanceof TabularDataSupport) {
+            this.attributeType = "TabularDataSupport";
+        } else if (value instanceof ObjectName) {
+            this.attributeType = "ObjectName";
+        } else if (value instanceof Integer) {
+            this.attributeType = "Integer";
+        } else if (value instanceof Long) {
+            this.attributeType = "Long";
+        } else if (value instanceof Double) {
+            this.attributeType = "Double";
+        } else if (value instanceof Boolean) {
+            this.attributeType = "Boolean";
+        } else {
+            this.attributeType = value.getClass().getSimpleName();
+        }
     }
     
     /**
      * Helper function to parse query string in following format and initialise
      * Metric class:
      * 
-     * {metric}={mBeanName}/{attribute}/{attributeKey};
+     * {mBeanName}/{attribute}/{attributeKey};
      * 
      * E.g. jvm.memory.heap.used=java.lang:type=Memory/HeapMemoryUsage/used;
      * Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name="jdbc/storage"/numIdle;
@@ -92,10 +112,6 @@ public class JMXMetric {
         
         try {
             String query = metricQuery;
-
-            int firstEquals = query.indexOf('=');
-            this.metric = query.substring(0, firstEquals);
-            query = query.substring(firstEquals + 1);
 
             int firstColon = query.indexOf(':');
             String beanName = query.substring(0, firstColon + 1);
@@ -110,11 +126,12 @@ public class JMXMetric {
             query = paths[paths.length - 1];
             String[] parts = query.split("(?!\\B\"[^\"]*)/(?![^\"]*\"\\B)");
 
-//            String[] parts = query.split("/");
             beanName += parts[0];
             this.mBeanName = beanName;
 
-            this.attribute = parts[1];
+            if (parts.length > 1) {
+                this.attribute = parts[1];
+            }
             if (parts.length > 2) {
                 this.attributeKey = parts[2];
             }
@@ -127,9 +144,6 @@ public class JMXMetric {
     @Override
     public String toString() {
         String s = "";
-        if (this.metric != null) {
-            s += this.metric + "=";
-        }
         s += this.mBeanName;
         if (this.attribute != null) {
             s += "/" + this.attribute;
@@ -137,11 +151,11 @@ public class JMXMetric {
         if (this.attributeKey != null) {
             s += "/" + this.attributeKey;
         }
-        if (value != null) {
-            s += "=" + value.toString();
-        }
         if (attributeType != null) {
             s += " (" + attributeType + ")";
+        }
+        if (value != null) {
+            s += " = " + value.toString();
         }
         
         return s;
@@ -157,10 +171,7 @@ public class JMXMetric {
         String beanName = this.mBeanName.replace("\"", "\\\"");
 
         String json = "{";
-        if (this.metric != null) {
-            json += "\"metricName\" : \"" + this.metric + "\"";
-        }
-        json += ", \"mBeanName\" : \"" + beanName + "\"";
+        json += "\"mBeanName\" : \"" + beanName + "\"";
         json += ", \"attribute\" : \"" + this.attribute + "\"";
         if (this.attributeKey != null) {
             json += ", \"attributeKey\" : \"" + this.attributeKey + "\"";
@@ -172,9 +183,6 @@ public class JMXMetric {
             json += ", \"value\" : \"" + this.value.toString() + "\"";
         }
         json += "}";
-
-//        Gson gson = new Gson();
-//        String json = gson.toJson(this);
 
         return json;
     }
