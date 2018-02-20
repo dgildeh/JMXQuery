@@ -1,10 +1,10 @@
 # JMXQuery
 
-This project provides a command line too written in Java and packaged as a Jar to allow you to connect to and query a JMX endpoint on a Java Virtual Machine.
+This project provides a command line tool written in Java and packaged as a Jar to allow you to connect to and query a JMX endpoint on a Java Virtual Machine.
 
 The command line tool can be used standalone, or with the Python module also included in this project, if you want to provide a way to query JMX from Python.
 
-This project was originally written in December 2014 and has been used in the Outlyer monitoring agent since to provide monitoring for JVM tools.
+This project was originally written in December 2014 and has been used in the Outlyer monitoring agent since to provide monitoring for JVM applications via Nagios plugins.
 
 Outlyer plugins use the Jar via the Python module to query JVM metrics via JMX and provide those for dashboards and alerts on Outlyer.
 
