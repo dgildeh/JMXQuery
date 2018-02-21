@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 from codecs import open
 from os import path
 
@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
   name = 'jmxquery',
   packages = ['jmxquery'],
-  version = '0.2',
+  version = '0.1.0',
   description = 'A JMX Interface for Python to Query runtime metrics in a JVM',
   long_description=long_description,
   author = 'David Gildeh',
@@ -18,4 +18,6 @@ setup(
   url = 'https://github.com/outlyerapp/jmxquery',
   keywords = ['java', 'jmx', 'metrics', 'monitoring'],
   classifiers = [],
+  include_package_data=True,
+  zip_safe = False
 )
