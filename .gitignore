@@ -12,3 +12,4 @@ target/
 *.iml
 nbactions.xml
 *.log
+MANIFEST

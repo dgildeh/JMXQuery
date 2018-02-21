@@ -1,13 +1,21 @@
 from distutils.core import setup
+from codecs import open
+from os import path
+
+# Get the long description from the README file
+here = path.abspath(path.dirname(__file__))
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
   name = 'jmxquery',
   packages = ['jmxquery'],
-  version = '1.0',
+  version = '0.1',
   description = 'A JMX Interface for Python to Query runtime metrics in a JVM',
+  long_description=long_description,
   author = 'David Gildeh',
   author_email = 'david.gildeh@outlyer.com',
   url = 'https://github.com/outlyerapp/jmxquery',
-  download_url = 'https://github.com/outlyerapp/JMXQuery/releases/download/0.1.6/jmxquery-pymodule-0.1.6.tar.gz',
   keywords = ['java', 'jmx', 'metrics', 'monitoring'],
   classifiers = [],
 )
