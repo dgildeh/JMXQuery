@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import javax.management.MalformedObjectNameException;
 
 /**
  *
@@ -39,30 +41,64 @@ public class JMXQuery {
         try {
             query.connector = new JMXConnector(query.url, query.username, query.password);
         } catch (IOException ioe) {
-            System.out.println("Error connecting to JMX endpoint: " + ioe.getMessage());
-            System.exit(2);
+            if (query.outputJSON) {
+                System.out.println("{ \"error\": \"connection-error\", \"message\":\"" + ioe.getMessage() + "\"}");
+                System.exit(2);
+            } else {
+                System.out.println("Error connecting to JMX endpoint: " + ioe.getMessage());
+                System.exit(2);
+            }
         }
         
         // Process Query
-        ArrayList<JMXMetric> outputMetrics = query.connector.getMetrics(query.metrics);  
-        if (query.outputJSON) {
-            System.out.println("[");
-            int count = 0;
-            for (JMXMetric metric : outputMetrics) {
-                if (count > 0) {
-                    System.out.print(", \n" + metric.toJSON());
-                } else {
-                    count++;
-                    System.out.print(metric.toJSON());
+        try {
+            ArrayList<JMXMetric> outputMetrics = query.connector.getMetrics(query.metrics);  
+            if (query.outputJSON) {
+                System.out.println("[");
+                int count = 0;
+                for (JMXMetric metric : outputMetrics) {
+                    if (count > 0) {
+                        System.out.print(", \n" + metric.toJSON());
+                    } else {
+                        count++;
+                        System.out.print(metric.toJSON());
+                    }
                 }
+                System.out.println("]");
+            } else {
+                for (JMXMetric metric : outputMetrics) {
+                    System.out.println(metric.toString());
+                }
+                System.out.println("=====================");
+                System.out.println("Total Metrics Found: " + String.valueOf(outputMetrics.size()));
             }
-            System.out.println("]");
-        } else {
-            for (JMXMetric metric : outputMetrics) {
-                System.out.println(metric.toString());
+        } catch (IOException ioe) {
+            if (query.outputJSON) {
+                System.out.println("{ \"error\": \"query-connection-error\", \"message\":\"" + ioe.getMessage() + "\"}");
+                System.exit(2);
+            } else {
+                System.out.println("There was an IO Error running the query '" + query.metrics.toString() + "': " + ioe.getMessage());
+                System.exit(2);
+            }
+        } catch (MalformedObjectNameException me) {
+            if (query.outputJSON) {
+                System.out.println("{ \"error\": \"bad-query\", \"message\":\"" + me.getMessage() + "\"}");
+                System.exit(2);
+            } else {
+                System.out.println("The query '" + query.metrics.toString() + "' is invalid: " + me.getMessage());
+                System.exit(2);
+            }
+        } catch (Exception e) {
+            if (query.outputJSON) {
+                System.out.println("{ \"error\": \"general-exception\", \"message\":\"" + e.getMessage() + "\"}");
+                System.exit(2);
+            } else {
+                System.out.println("An exception was thrown while running the query '" + query.metrics.toString() + "': " + e.getMessage());
+                System.out.println(Arrays.toString(e.getStackTrace()));
+                System.exit(2);
             }
         }
-
+        
         // Disconnect from JMX Cleanly
         query.connector.disconnect(); 
     }

@@ -5,15 +5,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
+import javax.management.ReflectionException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.InvalidKeyException;
 import javax.management.openmbean.TabularDataSupport;
@@ -109,10 +112,16 @@ public class JMXConnector {
      * Fetches a list of metrics and their values in one go
      * 
      * @param metricsList   List of JMXMetrics to fetch
-     * @return              metricsList with values for each metric populated
+     * @return              A list of all the MBean metrics found from the query
      * @throws java.io.IOException
+     * @throws javax.management.MalformedObjectNameException
+     * @throws javax.management.InstanceNotFoundException
+     * @throws javax.management.IntrospectionException
+     * @throws javax.management.ReflectionException
      */
-    public ArrayList<JMXMetric> getMetrics(ArrayList<JMXMetric> metricsList) throws IOException {
+    public ArrayList<JMXMetric> getMetrics(ArrayList<JMXMetric> metricsList) throws IOException, 
+            MalformedObjectNameException, InstanceNotFoundException, IntrospectionException, ReflectionException {
+        
         ArrayList<JMXMetric> newMetricList = new ArrayList<JMXMetric>();
         for (JMXMetric metric : metricsList) {
             ArrayList<JMXMetric> fetchedMetrics = getMetrics(metric);
@@ -125,68 +134,66 @@ public class JMXConnector {
      * Main function to query and get metrics from JMX
      * 
      * @param metricQuery       Metric query to filter on, use *:* to list everything
-     * @return
-     * @throws IOException 
+     * @return                  A list of all the MBean metrics found from the query
+     * @throws java.io.IOException
+     * @throws javax.management.MalformedObjectNameException
+     * @throws javax.management.InstanceNotFoundException
+     * @throws javax.management.IntrospectionException
+     * @throws javax.management.ReflectionException
      */
-    private ArrayList<JMXMetric> getMetrics(JMXMetric metricQuery) throws IOException {
+    private ArrayList<JMXMetric> getMetrics(JMXMetric metricQuery) throws IOException, 
+            MalformedObjectNameException, InstanceNotFoundException, IntrospectionException, ReflectionException {
         
         ArrayList<JMXMetric> metrics = new ArrayList<JMXMetric>();
         
         MBeanInfo info = null;
         JMXMetric attributeMetric = null;
         
-        try {
-        
-            // Get list of MBeans from MBean Query           
-            Set<ObjectInstance> instances = connection.queryMBeans(new ObjectName(metricQuery.getmBeanName()), null);
-            Iterator<ObjectInstance> iterator = instances.iterator();
-                
-            // Iterate through results
-            while (iterator.hasNext()) {
-                
-                ObjectInstance instance = iterator.next();
-                
-                try {
+        // Get list of MBeans from MBean Query           
+        Set<ObjectInstance> instances = connection.queryMBeans(new ObjectName(metricQuery.getmBeanName()), null);
+        Iterator<ObjectInstance> iterator = instances.iterator();
 
-                    // Get list of attributes for MBean
-                    info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));                
-                    MBeanAttributeInfo[] attributes = info.getAttributes();
-                    for (MBeanAttributeInfo attribute : attributes) {
-                        
-                        attributeMetric= new JMXMetric(instance.getObjectName().toString(),
-                                                        attribute.getName(), 
-                                                        null);
-                    
-                        // If attribute given in query, only return those attributes
-                        if ((metricQuery.getAttribute() != null) &&
-                                (! metricQuery.getAttribute().equals("*"))) {
+        // Iterate through results
+        while (iterator.hasNext()) {
 
-                            if (attribute.getName().equals(metricQuery.getAttribute())) {
-                                // Set attribute type and get the metric(s)
-                                attributeMetric.setAttributeType(attribute.getType());
-                                attributeMetric.setAttribute(attribute.getName());
-                                metrics.addAll(getAttributes(attributeMetric));
-                            }
-                        } else {
+            ObjectInstance instance = iterator.next();
 
-                            // Get all attributes for MBean Query
+            try {
+
+                // Get list of attributes for MBean
+                info = connection.getMBeanInfo(new ObjectName(instance.getObjectName().toString()));                
+                MBeanAttributeInfo[] attributes = info.getAttributes();
+                for (MBeanAttributeInfo attribute : attributes) {
+
+                    attributeMetric= new JMXMetric(instance.getObjectName().toString(),
+                                                    attribute.getName(), 
+                                                    null);
+
+                    // If attribute given in query, only return those attributes
+                    if ((metricQuery.getAttribute() != null) &&
+                            (! metricQuery.getAttribute().equals("*"))) {
+
+                        if (attribute.getName().equals(metricQuery.getAttribute())) {
+                            // Set attribute type and get the metric(s)
                             attributeMetric.setAttributeType(attribute.getType());
                             attributeMetric.setAttribute(attribute.getName());
                             metrics.addAll(getAttributes(attributeMetric));
                         }
+                    } else {
+
+                        // Get all attributes for MBean Query
+                        attributeMetric.setAttributeType(attribute.getType());
+                        attributeMetric.setAttribute(attribute.getName());
+                        metrics.addAll(getAttributes(attributeMetric));
                     }
-                } catch (NullPointerException e) {
-                    attributeMetric.setAttributeType(null);
-                    attributeMetric.setValue(null);
-                    metrics.add(attributeMetric);
-                }   
-            }
-        } catch (Exception e) {
-            System.err.println("Error listing MBean Tree for query " + metricQuery.toString() 
-                    + " getting metric " + attributeMetric.toString());
-                   // + ": " + Arrays.toString(e.getStackTrace()));    
+                }
+            } catch (NullPointerException e) {
+                attributeMetric.setAttributeType(null);
+                attributeMetric.setValue(null);
+                metrics.add(attributeMetric);
+            }   
         }
-        
+     
         return metrics;
     }
     

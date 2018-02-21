@@ -122,8 +122,8 @@ class JMXConnection(object):
         try:
             jsonOutput = subprocess.check_output(command)
         except subprocess.CalledProcessError as err:
-            logger.error("Error calling JMX: " + err.output)
-            print(err.output)
+            logger.error("Error calling JMX: " + err.output.decode('utf-8'))
+            raise err
 
         metrics = self.__load_from_json(jsonOutput)
         return metrics
