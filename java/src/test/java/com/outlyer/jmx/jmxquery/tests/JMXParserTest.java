@@ -43,6 +43,7 @@ public class JMXParserTest {
         Assert.assertEquals("java.lang:type=Memory", m.getmBeanName());
         Assert.assertEquals("HeapMemoryUsage", m.getAttribute());
         Assert.assertEquals("used", m.getAttributeKey());
+        Assert.assertEquals("java.lang:type=Memory/HeapMemoryUsage/used", m.toString());
     }
     
     @Test
@@ -54,6 +55,7 @@ public class JMXParserTest {
         Assert.assertEquals("java.lang:type=Memory", m.getmBeanName());
         Assert.assertEquals("HeapMemoryUsage", m.getAttribute());
         Assert.assertEquals("used", m.getAttributeKey());
+        Assert.assertEquals("java_{token}_name<>", m.toString());
     }
     
     @Test
@@ -67,6 +69,7 @@ public class JMXParserTest {
         Assert.assertEquals("java.lang:type=Memory", m.getmBeanName());
         Assert.assertEquals("HeapMemoryUsage", m.getAttribute());
         Assert.assertEquals("used", m.getAttributeKey());
+        Assert.assertEquals("java_{token}_name<label1={token},label2=value>", m.toString());
     }
     
     @Test

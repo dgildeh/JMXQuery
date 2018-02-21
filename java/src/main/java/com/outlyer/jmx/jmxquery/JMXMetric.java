@@ -193,12 +193,26 @@ public class JMXMetric {
     @Override
     public String toString() {
         String s = "";
-        s += this.mBeanName;
-        if (this.attribute != null) {
-            s += "/" + this.attribute;
-        }
-        if (this.attributeKey != null) {
-            s += "/" + this.attributeKey;
+        
+        if (this.metricName != null) {
+            s += this.metricName + "<";
+            int keyCount = 0;
+            for (String key : this.metricLabels.keySet()) {
+                s += key + "=" + this.metricLabels.get(key);
+                if (++keyCount < this.metricLabels.size()) {
+                    s += ",";
+                }
+            }
+            s += ">";
+            
+        } else {
+            s += this.mBeanName;
+            if (this.attribute != null) {
+                s += "/" + this.attribute;
+            }
+            if (this.attributeKey != null) {
+                s += "/" + this.attributeKey;
+            }
         }
         if (attributeType != null) {
             s += " (" + attributeType + ")";
