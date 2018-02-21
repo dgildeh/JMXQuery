@@ -73,6 +73,27 @@ public class JMXParserTest {
     }
     
     @Test
+    public void testTokenReplacements() throws ParseError {
+        String q = "tomcat_{attribute}_{attributeKey}<host={host},type={type},name={name}>==Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name=\"jdbc/storage\"/numIdle/key";
+        JMXMetric m = new JMXMetric(q);
+        Assert.assertEquals("Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name=\"jdbc/storage\"", m.getmBeanName());
+        Assert.assertEquals("numIdle", m.getAttribute());
+        Assert.assertEquals("key", m.getAttributeKey());
+        Assert.assertEquals("tomcat_{attribute}_{attributeKey}", m.getmetricName());
+        Assert.assertEquals("{host}", m.getmetricLabels().get("host"));
+        Assert.assertEquals("{type}", m.getmetricLabels().get("type"));
+        Assert.assertEquals("{name}", m.getmetricLabels().get("name"));
+        
+        m.replaceTokens();
+        
+        Assert.assertEquals("tomcat_numIdle_key", m.getmetricName());
+        Assert.assertEquals("localhost", m.getmetricLabels().get("host"));
+        Assert.assertEquals("DataSource", m.getmetricLabels().get("type"));
+        Assert.assertEquals("\"jdbc/storage\"", m.getmetricLabels().get("name"));   
+        Assert.assertEquals("tomcat_numIdle_key<host=localhost,name=\"jdbc/storage\",type=DataSource>", m.toString());
+    }
+    
+    @Test
     public void testSlashesInsidePath() throws ParseError {
         String q = "Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name=\"jdbc/storage\"/numIdle";
         JMXMetric m = new JMXMetric(q);

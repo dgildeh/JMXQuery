@@ -1,6 +1,8 @@
 package com.outlyer.jmx.jmxquery;
 
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularDataSupport;
@@ -120,6 +122,76 @@ public class JMXMetric {
     }
     
     /**
+     * Forces the object to replace any tokens in metricName or metricLabels from
+     * the mBean object properties, attribute or attributeKey. The following
+     * tokens are replaced:
+     * 
+     *  {attribute} - Will replace with this.attribute
+     *  {attributeKey} - Will replace with this.attributeKey
+     *  {XXX} - Will replace with any mBean object property with same name as XXX
+     * 
+     */
+    public void replaceTokens() {
+        // Only run if metricName isn't null
+        if (this.metricName != null) {
+            
+            HashMap<String, String> replacements = new HashMap<String, String>();
+            if (this.attribute != null) {
+                replacements.put("attribute", this.attribute);
+            }
+            if (this.attributeKey != null) {
+                replacements.put("attributeKey", this.attributeKey);
+            }
+            // Get properties from mBeanName
+            int firstColon = this.mBeanName.indexOf(':');
+            String[] props = this.mBeanName.substring(firstColon + 1)
+                    .split("(?!\\B\"[^\"]*),(?![^\"]*\"\\B)");
+            for (int i = 0; i < props.length; i++) {
+                String[] parts = props[i].split("=");
+                replacements.put(parts[0], parts[1]);
+            } 
+                      
+            // First replace tokens in metricName
+            this.metricName = this.replaceTokens(this.metricName, replacements);
+            // Then labels
+            for (String key : this.metricLabels.keySet()) {
+                String value = this.metricLabels.get(key);
+                if (value.indexOf("}") > 0) {
+                    value = this.replaceTokens(value, replacements);
+                    this.metricLabels.put(key, value);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Replaces the text tokens in {} with values if found in the replacements 
+     * HashMap, otherwise just put the token name there instead
+     * 
+     * @param text              The text to replace
+     * @param replacements      A HashMap of replacement tokens
+     * @return                  The final string with tokens replaced
+     */
+    private String replaceTokens(String text, HashMap<String, String> replacements) {
+        // Looking for tokens in {}, i.e. {name}
+        Pattern pattern = Pattern.compile("\\{(.+?)\\}");
+        Matcher matcher = pattern.matcher(text);
+        StringBuilder builder = new StringBuilder();
+        int i = 0;
+        while (matcher.find()) {
+            String replacement = replacements.get(matcher.group(1));
+            builder.append(text.substring(i, matcher.start()));
+            if (replacement == null)
+                builder.append(matcher.group(0));
+            else
+                builder.append(replacement);
+            i = matcher.end();
+        }
+        builder.append(text.substring(i, text.length()));
+        return builder.toString();
+    } 
+    
+    /**
      * Helper function to parse query string in following format and initialise
      * Metric class:
      * 
@@ -234,6 +306,18 @@ public class JMXMetric {
         String beanName = this.mBeanName.replace("\"", "\\\"");
 
         String json = "{";
+        if (this.metricName != null) {
+            json += "\"metricName\" : \"" + this.metricName + "\"";
+            json += "\"metricLabels\" : {";
+            int keyCount = 0;
+            for (String key : this.metricLabels.keySet()) {
+                json += "\"" + key + "\" : \"" + this.metricLabels.get(key) + "\"";
+                if (++keyCount < this.metricLabels.size()) {
+                    json += ",";
+                }
+            }
+            json += "}";
+        }
         json += "\"mBeanName\" : \"" + beanName + "\"";
         json += ", \"attribute\" : \"" + this.attribute + "\"";
         if (this.attributeKey != null) {
