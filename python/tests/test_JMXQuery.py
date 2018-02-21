@@ -27,12 +27,18 @@ jmxConnection = JMXConnection(CONNECTION_URL)
 
 def test_specific_queries():
 
-    jmxQuery = [JMXQuery("kafka.*:type=*,name=*PerSec", None, None, )]
+    jmxQuery = [JMXQuery("kafka.cluster:type=*,name=*,topic=*,partition=*",
+                         metric_name="kafka_cluster_{type}_{name}",
+                         metric_labels={"topic" : "{topic}", "partition" : "{partition}"})]
+    print(jmxQuery[0].to_query_string())
     metrics = jmxConnection.query(jmxQuery)
     printMetrics(metrics)
 
 def printMetrics(metrics):
     for metric in metrics:
-        metricName = metric.to_query_string()
-        print(f"{metricName} ({metric.value_type}) = {metric.value}")
+        if metric.metric_name:
+            print(f"{metric.metric_name}<{metric.metric_labels}> == {metric.value}")
+        else:
+            print(f"{metric.to_query_string()} ({metric.value_type}) = {metric.value}")
+
     print("===================\nTotal Metrics: " + str(len(metrics)))

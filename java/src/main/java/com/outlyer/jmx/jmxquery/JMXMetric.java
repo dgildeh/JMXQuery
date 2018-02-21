@@ -47,6 +47,10 @@ public class JMXMetric {
     public HashMap<String, String> getmetricLabels() {
         return this.metricLabels;
     }
+    
+    public void setmetricLabels(HashMap<String, String> metricLabels) {
+        this.metricLabels = metricLabels;
+    }
 
     public String getmBeanName() {
         return mBeanName;
@@ -300,7 +304,7 @@ public class JMXMetric {
 
         String json = "{";
         if (this.metricName != null) {
-            json += "\"metricName\" : \"" + this.metricName + "\"";
+            json += "\"metricName\" : \"" + this.metricName + "\",";
             json += "\"metricLabels\" : {";
             int keyCount = 0;
             for (String key : this.metricLabels.keySet()) {
@@ -309,7 +313,7 @@ public class JMXMetric {
                     json += ",";
                 }
             }
-            json += "}";
+            json += "},";
         }
         json += "\"mBeanName\" : \"" + beanName + "\"";
         json += ", \"attribute\" : \"" + this.attribute + "\"";

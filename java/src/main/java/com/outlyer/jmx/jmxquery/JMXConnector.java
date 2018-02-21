@@ -168,6 +168,8 @@ public class JMXConnector {
                     attributeMetric= new JMXMetric(instance.getObjectName().toString(),
                                                     attribute.getName(), 
                                                     null);
+                    attributeMetric.setmetricName(metricQuery.getmetricName());
+                    attributeMetric.setmetricLabels(metricQuery.getmetricLabels());
 
                     // If attribute given in query, only return those attributes
                     if ((metricQuery.getAttribute() != null) &&
@@ -236,6 +238,8 @@ public class JMXConnector {
                                                 attribute.getAttribute(),
                                                 attribute.getAttributeKey());
                     foundKey.setAttributeType(cData.get(attribute.getAttributeKey()));
+                    foundKey.setmetricName(attribute.getmetricName());
+                    foundKey.setmetricLabels(attribute.getmetricLabels()); 
                     attributes.addAll(getAttributes(foundKey, cData.get(attribute.getAttributeKey())));                    
                 } catch (InvalidKeyException e) {
                     // Key doesn't exist so don't add to list
@@ -247,6 +251,8 @@ public class JMXConnector {
                     JMXMetric foundKey = new JMXMetric(attribute.getmBeanName(),
                                              attribute.getAttribute(), key);
                     foundKey.setAttributeType(cData.get(key));
+                    foundKey.setmetricName(attribute.getmetricName());
+                    foundKey.setmetricLabels(attribute.getmetricLabels()); 
                     attributes.addAll(getAttributes(foundKey, cData.get(key)));
                 }
             }    

@@ -45,7 +45,7 @@ class JMXQuery:
         self.attributeKey = attributeKey
         self.value = value
         self.value_type = value_type
-        self.name = metric_name
+        self.metric_name = metric_name
         self.metric_labels = metric_labels
 
     def to_query_string(self) -> str:
@@ -58,8 +58,18 @@ class JMXQuery:
 
                     Example: java.lang:type=Memory/HeapMemoryUsage/init
         """
+        query = ""
+        if self.metric_name:
+            query += self.metric_name + "<"
+            keyCount = 0
+            for key, value in self.metric_labels.items():
+                query += key + "=" + value
+                keyCount += 1
+                if keyCount < len(self.metric_labels):
+                    query += ","
+            query += ">=="
 
-        query = self.mBeanName
+        query += self.mBeanName
         if self.attribute:
             query += "/" + self.attribute
         if self.attributeKey:
