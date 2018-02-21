@@ -1,5 +1,6 @@
 package com.outlyer.jmx.jmxquery;
 
+import java.util.HashMap;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularDataSupport;
@@ -7,14 +8,16 @@ import javax.management.openmbean.TabularDataSupport;
 /**
  * Stores parameters for a single metric query passed into command line in format:
  * 
- *  {metric}={mBeanName}/{attribute}/{attributeKey}
+ * {metricName}<{metricLabels}>=={mBeanName}/{attribute}/{attributeKey}
  * 
- * E.g. jvm.memory.heap.used=java.lang:type=Memory/HeapMemoryUsage/used
+ * E.g. jvm.memory.heap.used<>=java.lang:type=Memory/HeapMemoryUsage/used
  * 
  * @author David Gildeh (www.outlyer.com)
  */
 public class JMXMetric {
     
+    private String metricName = null;
+    private HashMap<String, String> metricLabels = new HashMap<String, String>();
     private String mBeanName;
     private String attribute;
     private String attributeKey = null;
@@ -27,8 +30,27 @@ public class JMXMetric {
         this.attributeKey = attributeKey;
     }
     
+    public JMXMetric(String metricName, String mBeanName, String attribute, String attributeKey) {
+        this.metricName = metricName;
+        this.mBeanName = mBeanName;
+        this.attribute = attribute;
+        this.attributeKey = attributeKey;
+    }
+    
     public JMXMetric(String metricQuery) throws ParseError {
         this.parseMetricQuery(metricQuery);
+    }
+    
+    public String getmetricName() {
+        return metricName;
+    }
+
+    public void setmetricName(String metricName) {
+        this.metricName = metricName;
+    }
+    
+    public HashMap<String, String> getmetricLabels() {
+        return this.metricLabels;
     }
 
     public String getmBeanName() {
@@ -101,10 +123,11 @@ public class JMXMetric {
      * Helper function to parse query string in following format and initialise
      * Metric class:
      * 
-     * {mBeanName}/{attribute}/{attributeKey};
+     * {metricName}<{metricLabels}>=={mBeanName}/{attribute}/{attributeKey};
      * 
-     * E.g. jvm.memory.heap.used=java.lang:type=Memory/HeapMemoryUsage/used;
-     * Tomcat:type=DataSource,context=/,host=localhost,class=javax.sql.DataSource,name="jdbc/storage"/numIdle;
+     * where {metricName}<{metricLabels}> is optional and can include tokens
+     * 
+     * E.g. java_lang_{attribute}_{key}<type={type},label=key>==java.lang:type=Memory/HeapMemoryUsage/used;
      * 
      * @param metricQuery 
      */
@@ -112,7 +135,33 @@ public class JMXMetric {
         
         try {
             String query = metricQuery;
+            
+            // metricName is optional
+            if (metricQuery.indexOf("==") > 0) {
+                int seperator = metricQuery.indexOf("==");
+                String metricNamePart = query.substring(0, seperator);
+                query = query.substring(seperator + 2);
+                
+                // Parse metric name and labels
+                if (metricNamePart.indexOf("<") > 0) {
+                    int labelSeperator = metricNamePart.indexOf("<");
+                    this.metricName = metricNamePart.substring(0, labelSeperator);
+                    String labelsPart = metricNamePart.substring(labelSeperator + 1).replace(">", "");
+                    // This finds all commas which are not inside double quotes.
+                    String[] labels = labelsPart.split("(?!\\B\"[^\"]*),(?![^\"]*\"\\B)");
+                    for (int i=0; i < labels.length; i++) {
+                        String[] parts = labels[i].split("=");
+                        if (parts.length < 2) {
+                            throw new ParseError("Label format " + labelsPart + " is invalid.");
+                        }
+                        this.metricLabels.put(parts[0], parts[1]);
+                    }
+                } else {
+                    this.metricName = metricNamePart;
+                }
+            }
 
+            // Parse Query
             int firstColon = query.indexOf(':');
             String beanName = query.substring(0, firstColon + 1);
             query = query.substring(firstColon + 1);
