@@ -7,7 +7,7 @@ setup(
   author = 'David Gildeh',
   author_email = 'david.gildeh@outlyer.com',
   url = 'https://github.com/outlyerapp/jmxquery',
-  download_url = 'https://github.com/outlyerapp/jmxquery/archive/1.0.tar.gz',
+  download_url = 'https://github.com/outlyerapp/JMXQuery/releases/download/0.1.6/jmxquery-pymodule-0.1.6.tar.gz',
   keywords = ['java', 'jmx', 'metrics', 'monitoring'],
   classifiers = [],
 )
