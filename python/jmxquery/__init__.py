@@ -38,7 +38,7 @@ class JMXQuery:
                  value: object = None,
                  value_type: str = None,
                  metric_name: str = None,
-                 metric_type: MetricType = None):
+                 metric_labels: dict = None):
 
         self.mBeanName = mBeanName
         self.attribute = attribute
@@ -46,7 +46,7 @@ class JMXQuery:
         self.value = value
         self.value_type = value_type
         self.name = metric_name
-        self.type = type
+        self.metric_labels = metric_labels
 
     def to_query_string(self) -> str:
         """
@@ -66,16 +66,6 @@ class JMXQuery:
             query += "/" + self.attributeKey
 
         return query
-
-    def __eq__(self, other):
-        """
-        TODO - We want to check if two JMXQuerys are the same to ensure the original settings are copied
-        over in the results
-
-        :param other:
-        :return:
-        """
-        pass
 
 class JMXConnection(object):
     """
@@ -125,6 +115,7 @@ class JMXConnection(object):
             logger.error("Error calling JMX: " + err.output.decode('utf-8'))
             raise err
 
+        logger.debug("JSON Output Received: " + jsonOutput.decode('utf-8'))
         metrics = self.__load_from_json(jsonOutput)
         return metrics
 
@@ -140,15 +131,21 @@ class JMXConnection(object):
         for jsonMetric in jsonMetrics:
             mBeanName = jsonMetric['mBeanName']
             attribute = jsonMetric['attribute']
+            attributeType = jsonMetric['attributeType']
+            metric_name = None
+            if 'metricName' in jsonMetric:
+                metric_name = jsonMetric['metricName']
+            metric_labels = None
+            if 'metricLabels' in jsonMetric:
+                metric_labels = jsonMetric['metricLabels']
             attributeKey = None
             if 'attributeKey' in jsonMetric:
                 attributeKey = jsonMetric['attributeKey']
-            attributeType = jsonMetric['attributeType']
             value = None
             if 'value' in jsonMetric:
                 value = jsonMetric['value']
 
-            metrics.append(JMXQuery(mBeanName, attribute, attributeKey, value, attributeType))
+            metrics.append(JMXQuery(mBeanName, attribute, attributeKey, value, attributeType, metric_name, metric_labels))
         return metrics
 
     def query(self, queries: List[JMXQuery]) -> List[JMXQuery]:

@@ -57,7 +57,8 @@ public class JMXQuery {
                 System.out.println("[");
                 int count = 0;
                 for (JMXMetric metric : outputMetrics) {
-                    if (count > 0) {
+                    metric.replaceTokens();
+                    if (count > 0) {                        
                         System.out.print(", \n" + metric.toJSON());
                     } else {
                         count++;
@@ -67,6 +68,7 @@ public class JMXQuery {
                 System.out.println("]");
             } else {
                 for (JMXMetric metric : outputMetrics) {
+                    metric.replaceTokens();
                     System.out.println(metric.toString());
                 }
                 System.out.println("=====================");

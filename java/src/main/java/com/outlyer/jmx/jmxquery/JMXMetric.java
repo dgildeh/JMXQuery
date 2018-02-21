@@ -32,13 +32,6 @@ public class JMXMetric {
         this.attributeKey = attributeKey;
     }
     
-    public JMXMetric(String metricName, String mBeanName, String attribute, String attributeKey) {
-        this.metricName = metricName;
-        this.mBeanName = mBeanName;
-        this.attribute = attribute;
-        this.attributeKey = attributeKey;
-    }
-    
     public JMXMetric(String metricQuery) throws ParseError {
         this.parseMetricQuery(metricQuery);
     }
@@ -323,10 +316,10 @@ public class JMXMetric {
         if (this.attributeKey != null) {
             json += ", \"attributeKey\" : \"" + this.attributeKey + "\"";
         }
-        if (attributeType != null) {
+        if (this.attributeType != null) {
             json += ", \"attributeType\" : \"" + this.attributeType + "\"";
         }
-        if (value != null) {
+        if (this.value != null) {
             json += ", \"value\" : \"" + this.value.toString() + "\"";
         }
         json += "}";

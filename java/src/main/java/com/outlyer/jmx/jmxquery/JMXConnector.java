@@ -165,8 +165,8 @@ public class JMXConnector {
                 MBeanAttributeInfo[] attributes = info.getAttributes();
                 for (MBeanAttributeInfo attribute : attributes) {
 
-                    attributeMetric= new JMXMetric(instance.getObjectName().toString().toLowerCase(),
-                                                    attribute.getName().toLowerCase(), 
+                    attributeMetric= new JMXMetric(instance.getObjectName().toString(),
+                                                    attribute.getName(), 
                                                     null);
 
                     // If attribute given in query, only return those attributes
