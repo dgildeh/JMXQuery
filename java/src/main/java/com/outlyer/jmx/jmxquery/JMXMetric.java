@@ -49,7 +49,8 @@ public class JMXMetric {
     }
     
     public void setmetricLabels(HashMap<String, String> metricLabels) {
-        this.metricLabels = metricLabels;
+        this.metricLabels.clear();
+        this.metricLabels.putAll(metricLabels);
     }
 
     public String getmBeanName() {

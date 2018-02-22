@@ -60,14 +60,18 @@ class JMXQuery:
         """
         query = ""
         if self.metric_name:
-            query += self.metric_name + "<"
-            keyCount = 0
-            for key, value in self.metric_labels.items():
-                query += key + "=" + value
-                keyCount += 1
-                if keyCount < len(self.metric_labels):
-                    query += ","
-            query += ">=="
+            query += self.metric_name
+
+            if ((self.metric_labels != None) and (len(self.metric_labels) > 0)):
+                query += "<"
+                keyCount = 0
+                for key, value in self.metric_labels.items():
+                    query += key + "=" + value
+                    keyCount += 1
+                    if keyCount < len(self.metric_labels):
+                        query += ","
+                query += ">"
+            query += "=="
 
         query += self.mBeanName
         if self.attribute:
@@ -76,6 +80,33 @@ class JMXQuery:
             query += "/" + self.attributeKey
 
         return query
+
+    def to_string(self):
+
+        string = ""
+        if self.metric_name:
+            string += self.metric_name
+
+            if ((self.metric_labels != None) and (len(self.metric_labels) > 0)):
+                string += " {"
+                keyCount = 0
+                for key, value in self.metric_labels.items():
+                    string += key + "=" + value
+                    keyCount += 1
+                    if keyCount < len(self.metric_labels):
+                        string += ","
+                string += "}"
+        else:
+            string += self.mBeanName
+            if self.attribute:
+                string += "/" + self.attribute
+            if self.attributeKey:
+                string += "/" + self.attributeKey
+
+        string += " = "
+        string += str(self.value) + " (" + self.value_type + ")"
+
+        return string
 
 class JMXConnection(object):
     """
@@ -166,7 +197,3 @@ class JMXConnection(object):
         :return:            A list of JMXQuerys found in the JVM with their current values
         """
         return self.__run_jar(queries)
-
-
-
-
