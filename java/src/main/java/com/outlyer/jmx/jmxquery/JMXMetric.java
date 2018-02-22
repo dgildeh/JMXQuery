@@ -325,7 +325,14 @@ public class JMXMetric {
             json += ", \"attributeType\" : \"" + this.attributeType + "\"";
         }
         if (this.value != null) {
-            json += ", \"value\" : \"" + this.value.toString() + "\"";
+            if ((this.value instanceof Integer) || 
+                    (this.value instanceof Long) || 
+                    (this.value instanceof Double) || 
+                    (this.value instanceof Boolean)) {
+                json += ", \"value\" : " + this.value.toString();
+            } else {
+                json += ", \"value\" : \"" + this.value.toString() + "\"";
+            }
         }
         json += "}";
 
