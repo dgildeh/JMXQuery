@@ -16,6 +16,8 @@ import logging
 JAR_PATH = os.path.dirname(os.path.realpath(__file__)) + '/JMXQuery-0.1.7.jar'
 # Default Java path
 DEFAULT_JAVA_PATH = 'java'
+# Default timeout for running jar in seconds
+DEFAULT_JAR_TIMEOUT = 10
 
 logger = logging.getLogger(__name__)
 
@@ -151,12 +153,20 @@ class JMXConnection(object):
 
         jsonOutput = "[]"
         try:
-            jsonOutput = subprocess.check_output(command)
+            output = subprocess.run(command,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    timeout=DEFAULT_JAR_TIMEOUT,
+                                    check=True)
+
+            jsonOutput = output.stdout.decode('utf-8')
+        except subprocess.TimeoutExpired as err:
+            logger.error(f"Error calling JMX, Timeout of {err.timeout} Expired: " + err.output.decode('utf-8'))
         except subprocess.CalledProcessError as err:
             logger.error("Error calling JMX: " + err.output.decode('utf-8'))
             raise err
 
-        logger.debug("JSON Output Received: " + jsonOutput.decode('utf-8'))
+        logger.debug("JSON Output Received: " + jsonOutput)
         metrics = self.__load_from_json(jsonOutput)
         return metrics
 
