@@ -7,6 +7,9 @@ from os import path
   push new versions of this module to PyPI. Use the following command to push new versions of the module:
   
   python3 setup.py sdist upload -r pypi
+  
+  Make sure you update the MANIFEST.in file if you change the name of the JAR file so its included in the 
+  module when submitted
 """
 
 # Get the long description from the README file

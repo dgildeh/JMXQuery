@@ -1,2 +1,2 @@
-include jmxquery/JMXQuery-0.1.7.jar
+include jmxquery/JMXQuery-0.1.8.jar
 include README.md
