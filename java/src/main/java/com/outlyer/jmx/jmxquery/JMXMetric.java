@@ -186,7 +186,8 @@ public class JMXMetric {
             i = matcher.end();
         }
         builder.append(text.substring(i, text.length()));
-        return builder.toString();
+        // Remove all quotations and spaces from any replacements
+        return builder.toString().replaceAll("\"", "").replaceAll(" ", "_");
     } 
     
     /**

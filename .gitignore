@@ -13,3 +13,4 @@ target/
 nbactions.xml
 *.log
 MANIFEST
+python/jmxquery.egg-info/
