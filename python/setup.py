@@ -2,6 +2,13 @@ from setuptools import setup
 from codecs import open
 from os import path
 
+"""
+  Refer to http://peterdowns.com/posts/first-time-with-pypi.html for instructions on how to 
+  push new versions of this module to PyPI. Use the following command to push new versions of the module:
+  
+  python3 setup.py sdist upload -r pypi
+"""
+
 # Get the long description from the README file
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -10,7 +17,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
   name = 'jmxquery',
   packages = ['jmxquery'],
-  version = '0.3.0',
+  version = '0.4.0',
   description = 'A JMX Interface for Python to Query runtime metrics in a JVM',
   long_description=long_description,
   author = 'David Gildeh',
