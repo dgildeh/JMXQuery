@@ -89,8 +89,8 @@ public class JMXParserTest {
         Assert.assertEquals("tomcat_numIdle_key", m.getmetricName());
         Assert.assertEquals("localhost", m.getmetricLabels().get("host"));
         Assert.assertEquals("DataSource", m.getmetricLabels().get("type"));
-        Assert.assertEquals("\"jdbc/storage\"", m.getmetricLabels().get("name"));   
-        Assert.assertEquals("tomcat_numIdle_key<host=localhost,name=\"jdbc/storage\",type=DataSource>", m.toString());
+        Assert.assertEquals("jdbc/storage", m.getmetricLabels().get("name"));   
+        Assert.assertEquals("tomcat_numIdle_key<host=localhost,name=jdbc/storage,type=DataSource>", m.toString());
     }
     
     @Test

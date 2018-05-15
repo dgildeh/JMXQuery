@@ -6,7 +6,7 @@
 
     <groupId>com.outlyer</groupId>
     <artifactId>JMXQuery</artifactId>
-    <version>0.1.7</version>
+    <version>0.1.8</version>
     <packaging>jar</packaging>
 
     <name>Outlyer JMXQuery tool</name>
