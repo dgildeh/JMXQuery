@@ -13,7 +13,7 @@ from enum import Enum
 import logging
 
 # Full Path to Jar
-JAR_PATH = os.path.dirname(os.path.realpath(__file__)) + '/JMXQuery-0.1.7.jar'
+JAR_PATH = os.path.dirname(os.path.realpath(__file__)) + '/JMXQuery-0.1.8.jar'
 # Default Java path
 DEFAULT_JAVA_PATH = 'java'
 # Default timeout for running jar in seconds
