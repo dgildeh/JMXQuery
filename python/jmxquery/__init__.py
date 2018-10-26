@@ -132,7 +132,7 @@ class JMXConnection(object):
         if java_path != None:
             self.java_path = java_path
 
-    def __run_jar(self, queries: List[JMXQuery]) -> List[JMXQuery]:
+    def __run_jar(self, queries: List[JMXQuery], timeout) -> List[JMXQuery]:
         """
         Run the JAR and return the results
 
@@ -156,7 +156,7 @@ class JMXConnection(object):
             output = subprocess.run(command,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
-                                    timeout=DEFAULT_JAR_TIMEOUT,
+                                    timeout=timeout,
                                     check=True)
 
             jsonOutput = output.stdout.decode('utf-8')
@@ -199,11 +199,11 @@ class JMXConnection(object):
             metrics.append(JMXQuery(mBeanName, attribute, attributeKey, value, attributeType, metric_name, metric_labels))
         return metrics
 
-    def query(self, queries: List[JMXQuery]) -> List[JMXQuery]:
+    def query(self, queries: List[JMXQuery], timeout=DEFAULT_JAR_TIMEOUT) -> List[JMXQuery]:
         """
         Run a list of JMX Queries against the JVM and get the results
 
         :param queries:     A list of JMXQuerys to query the JVM for
         :return:            A list of JMXQuerys found in the JVM with their current values
         """
-        return self.__run_jar(queries)
+        return self.__run_jar(queries, timeout)
