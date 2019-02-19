@@ -149,7 +149,7 @@ class JMXConnection(object):
             queryString += query.to_query_string() + ";"
 
         command.extend(["-q", queryString])
-        logger.debug(f"Running command: {command}")
+        logger.debug("Running command: " + str(command))
 
         jsonOutput = "[]"
         try:
@@ -161,7 +161,7 @@ class JMXConnection(object):
 
             jsonOutput = output.stdout.decode('utf-8')
         except subprocess.TimeoutExpired as err:
-            logger.error(f"Error calling JMX, Timeout of {err.timeout} Expired: " + err.output.decode('utf-8'))
+            logger.error("Error calling JMX, Timeout of " + str(err.timeout) + " Expired: " + err.output.decode('utf-8'))
         except subprocess.CalledProcessError as err:
             logger.error("Error calling JMX: " + err.output.decode('utf-8'))
             raise err
