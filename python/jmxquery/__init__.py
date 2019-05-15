@@ -115,7 +115,7 @@ class JMXConnection(object):
     The main class that connects to the JMX endpoint via a local JAR to run queries
     """
 
-    def __init__(self, connection_uri: str, jmx_username: str = None, jmx_password: str = None, java_path: str = None):
+    def __init__(self, connection_uri: str, jmx_username: str = None, jmx_password: str = None, java_path: str = DEFAULT_JAVA_PATH):
         """
         Creates instance of JMXQuery set to a specific connection uri for the JMX endpoint
 
@@ -128,9 +128,7 @@ class JMXConnection(object):
         self.connection_uri = connection_uri
         self.jmx_username = jmx_username
         self.jmx_password = jmx_password
-        self.java_path = DEFAULT_JAVA_PATH
-        if java_path != None:
-            self.java_path = java_path
+        self.java_path = java_path
 
     def __run_jar(self, queries: List[JMXQuery], timeout) -> List[JMXQuery]:
         """
