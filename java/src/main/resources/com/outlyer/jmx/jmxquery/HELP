@@ -1,4 +1,4 @@
-Usage: jmxquery [-url] [-username,u] [-password,p] [-query,q] [-incjvm] [-json] [-help]
+Usage: jmxquery [-url] [-username,u] [-password,p] [-query,q] [-call,c] [-incjvm] [-json] [-help]
 
 options are:
 
@@ -19,6 +19,12 @@ options are:
         For example: "java.lang:type=Memory/HeapMemoryUsage/used"
         {attributeKey} is optional and only used for Composite metric types. 
         Use semi-colon to separate metrics.
+
+-call, c
+		Call a method using a base64 encoded JSON as parameter
+		JSON format: 
+		{"objectName":"{mBeanName}","name":"{methodName}","params":[{"value":"{value}","type":"{type}"},...]}
+		Supported types: char, short, int, long, boolean, double, float, String, Float, Double, Short, Int, Long
 
 -incjvm
         Will add all standard JVM metrics to the -metrics query if used under java.lang domain

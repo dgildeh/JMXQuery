@@ -289,9 +289,40 @@ public class JMXMetric {
             s += " (" + attributeType + ")";
         }
         if (value != null) {
-            s += " = " + value.toString();
+            if (value instanceof String) {
+                s += " = " + value.toString();
+            } else {
+                s += " = " + valueToString(value);
+            }
         }
         
+        return s;
+    }
+
+    private static String valueToString(Object value) {
+        if (value == null) {
+            return "null";
+        }
+        if (value.getClass().isArray()) {
+            return arrayToString((Object[]) value);
+        }
+        if ((value instanceof Integer) || (value instanceof Long) || (value instanceof Double)
+                || (value instanceof Boolean)) {
+            return value.toString();
+        }
+        return new StringBuilder().append("\"").append(value).append("\"").toString();
+    }
+
+    private static String arrayToString(Object[] array) {
+        String s = "[";
+        boolean separatorRequired = false;
+        for (Object v : array) {
+            if (separatorRequired)
+                s += ",";
+            separatorRequired = true;
+            s += valueToString(v);
+        }
+        s += "]";
         return s;
     }
     
@@ -326,14 +357,7 @@ public class JMXMetric {
             json += ", \"attributeType\" : \"" + this.attributeType + "\"";
         }
         if (this.value != null) {
-            if ((this.value instanceof Integer) || 
-                    (this.value instanceof Long) || 
-                    (this.value instanceof Double) || 
-                    (this.value instanceof Boolean)) {
-                json += ", \"value\" : " + this.value.toString();
-            } else {
-                json += ", \"value\" : \"" + this.value.toString() + "\"";
-            }
+            json += ", \"value\" : " + valueToString(value);
         }
         json += "}";
 

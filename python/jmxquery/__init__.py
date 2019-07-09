@@ -11,6 +11,7 @@ import json
 from typing import List
 from enum import Enum
 import logging
+import base64
 
 # Full Path to Jar
 JAR_PATH = os.path.dirname(os.path.realpath(__file__)) + '/JMXQuery-0.1.8.jar'
@@ -110,6 +111,59 @@ class JMXQuery:
 
         return string
 
+class JMXParam:
+    """
+    A JMX Parameter for JMXMethod.
+    """
+
+    def __init__(self,
+                 value: str="",
+                 value_type: str = "String"):
+        """
+        This method creates a JMXMethod param
+        :param value:
+        :param value_type:
+        """
+        self.value = value
+        self.value_type = value_type
+
+class JMXMethod:
+    """
+    A JMX Method which is used to invoke a specific MBean method from the JVM.
+    """
+
+    def __init__(self,
+                 m_bean_name: str,
+                 method_name: str = None,
+                 params: List[JMXParam] = []):
+        """
+         Creates instance of JMXMethod
+
+         :param m_bean_name:  The JMX MBean name. E.g.
+         :param method_name:  JMX method name
+         :param params:    a list of JMXParam parameters
+         """
+        self.mBeanName = m_bean_name
+        self.methodName = method_name
+        self.params = params
+
+    def json(self):
+        """
+        this method return the json serialization of this object
+        :return: json string
+        """
+        json_param = ",".join(["{\"value\":\""+param.value+"\", type:\""+param.value_type+"\"}" for param in self.params])
+        return "{\"objectName\":\""+self.mBeanName+"\",\"name\":\""+self.methodName+"\",\"params\":["+json_param+"]}"
+
+    def base64json(self):
+        """
+        return the base64 encoded string of the json serialization of this object
+        :return: base64 json serialization of JMXMethod
+        """
+        json_result = self.json()
+        json_result = json_result.encode('ascii')
+        return base64.b64encode(json_result).decode("utf-8")
+
 class JMXConnection(object):
     """
     The main class that connects to the JMX endpoint via a local JAR to run queries
@@ -132,7 +186,7 @@ class JMXConnection(object):
         if java_path != None:
             self.java_path = java_path
 
-    def __run_jar(self, queries: List[JMXQuery], timeout) -> List[JMXQuery]:
+    def __run_query(self, queries: List[JMXQuery], timeout) -> List[JMXQuery]:
         """
         Run the JAR and return the results
 
@@ -170,6 +224,39 @@ class JMXConnection(object):
         metrics = self.__load_from_json(jsonOutput)
         return metrics
 
+    def __run_method(self, method: List[JMXMethod], timeout) -> str:
+        """
+        Run the JAR and return the results
+
+        :param query:   The query
+        :return:        The full command array to run via subprocess
+        """
+
+        command = [self.java_path, '-jar', JAR_PATH, '-url', self.connection_uri]
+        if self.jmx_username:
+            command.extend(["-u", self.jmx_username, "-p", self.jmx_password])
+
+        command.extend(["-c", method.base64json()])
+        logger.debug("Running command: " + str(command))
+
+        output = ""
+        try:
+            output = subprocess.run(command,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    timeout=timeout,
+                                    check=True)
+
+            output = output.stdout.decode('utf-8')
+        except subprocess.TimeoutExpired as err:
+            logger.error("Error calling JMX, Timeout of " + str(err.timeout) + " Expired: " + err.output.decode('utf-8'))
+        except subprocess.CalledProcessError as err:
+            logger.error("Error calling JMX: " + err.output.decode('utf-8'))
+            raise err
+
+        logger.debug("Output received: " + output)
+        return output
+		
     def __load_from_json(self, jsonOutput: str) -> List[JMXQuery]:
         """
         Loads the list of returned metrics from JSON response
@@ -206,4 +293,13 @@ class JMXConnection(object):
         :param queries:     A list of JMXQuerys to query the JVM for
         :return:            A list of JMXQuerys found in the JVM with their current values
         """
-        return self.__run_jar(queries, timeout)
+        return self.__run_query(queries, timeout)
+
+    def call(self, method: JMXMethod, timeout=DEFAULT_JAR_TIMEOUT) -> str:
+        """
+        Run a list of JMX Queries against the JVM and get the results
+
+        :param method:     A JMXMethod to be executed on the JVM
+        :return:           A string represents the result of the method
+        """
+        return self.__run_method(method, timeout)
