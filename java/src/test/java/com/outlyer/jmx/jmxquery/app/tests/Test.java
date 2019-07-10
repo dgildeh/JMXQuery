@@ -3,6 +3,7 @@ package com.outlyer.jmx.jmxquery.app.tests;
 public class Test implements TestMBean {
 
     private String names[] = new String[3];
+    private Integer val;
 
     public void setNames(String[] names) {
         this.names = names;
@@ -36,8 +37,8 @@ public class Test implements TestMBean {
         return str;
     }
 
-    public void setInt(Integer i) {
-        System.out.println(i);
+    public void setVal(final int val) {
+        this.val = val;
     }
 
     public String add(String x, String y) {
@@ -49,4 +50,7 @@ public class Test implements TestMBean {
         return x + y;
     }
 
+    public int getVal() {
+        return this.val;
+    }
 }
