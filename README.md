@@ -2,6 +2,7 @@ JMX Query
 =========
 
 A simple jar to query JMX data from a JVM and return in a format that can easily be used in Nagios check scripts.
+It has been extended to loop for a specified number of times, every n seconds.
 
 Requires Java 1.5 or above.
 
@@ -10,7 +11,7 @@ Usage
 ------
 
 ```
-jmxquery [-url] [-username,u] [-password,p] [-query,q] [-incjvm] [-json] [-help]
+jmxquery [-url] [-username,u] [-password,p] [-query,q] [-incjvm] [-json] [-count -every] [-help]
 ```
 
 options are:
@@ -41,6 +42,16 @@ options are:
 -json
         Will output everything in JSON format, otherwise will be human readable text. Useful
         for passing output to scripts.
+
+-count n will loop n times.
+
+-every n seconds.   This is used with -count to run the query periodically, and so collect 
+       the data over a period.  If using -json the data can easily be post processed into charts.
+       If using -count ... extra information is provided
+       date 2019/08/25
+       time 12:11:38.764
+       seconds since start, so 0,10,20, second etc - to make it easier to plot
+       loop     0,1,2,3 etc   
 
 Example Usage
 -------------
