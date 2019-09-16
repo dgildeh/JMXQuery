@@ -1,35 +1,92 @@
-# JMXQuery
+JMX Query
+=========
 
-This project provides a command line tool written in Java and packaged as a Jar to allow you to connect to and query a JMX endpoint on a Java Virtual Machine.
+A simple jar to query JMX data from a JVM and return in a format that can easily be used in Nagios check scripts.
 
-The command line tool can be used standalone, or with the Python module also included in this project, if you want to provide a way to query JMX from Python.
+Requires Java 1.5 or above.
 
-This project was originally written in December 2014 and has been used in the Outlyer monitoring agent since to provide monitoring for JVM applications via Nagios plugins.
 
-Outlyer plugins use the Jar via the Python module to query JVM metrics via JMX and provide those for dashboards and alerts on Outlyer.
-
-However, this module can also be used standalone with any other monitoring tool that can run shell commands or include the Python module.
-
-There are two folders under this repo:
-
-## Java 
-This contains all the source to build and compile the Jar command line tool that connects to the JVM JMX endpoint.
-
-## Python
-This contains all the source to connect to the Jar with a simple to use Python class that handles all the communication via the command line.
-
-## Usage
-Full instructions on how to run the JAR directly on the command line are provided under the Java folder. To use the Python module just use the pip installer:
+Usage
+------
 
 ```
-pip install jmxquery
+jmxquery [-url] [-username,u] [-password,p] [-query,q] [-incjvm] [-json] [-help]
 ```
 
-__Note: The Python module only supports Python 3 at this time__
+options are:
 
-## Contributing
+-help, h
+	Prints help page
+	
+-url 
+	JMX URL, for example: "service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi"
+	
+-username, u
+	jmx username if required
+	
+-password, p
+	jmx password if required
 
-This project is released under the MIT License so you are free to use it in your own projects. However contributions are welcome and can be made via a fork/PR for review.
+-query, q
+        List of metrics to fetch in following format: {mBeanName}/{attribute}/{attributeKey};
+        For example: "java.lang:type=Memory/HeapMemoryUsage/used"
+        {attributeKey} is optional and only used for Composite metric types. 
+        Use semi-colon to separate metrics.
 
-Issues can also be raised in this repo if you find any, so please report them here for our attention.
+-incjvm
+        Will add all standard JVM metrics to the -metrics query if used under java.lang domain
+        Useful utility function to add JVM metrics quickly and also for testing connections if
+        used by itself
 
+-json
+        Will output everything in JSON format, otherwise will be human readable text. Useful
+        for passing output to scripts.
+
+Example Usage
+-------------
+
+### Listing available metrics
+
+List all metrics:
+
+```
+java -jar jmxquery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -q "*:*"
+```
+
+To filter on a particular domain so you only see the JMX metrics available under that (i.e. java.lang) you can use the following command:
+
+```
+java -jar jmxquery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -q "java.lang:*"
+```
+
+If you want to filter on attribute name you could use the following query:
+
+```
+java -jar jmxquery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -q "*:*/HeapMemoryUsage"
+```
+
+This will list any MBean attributes that have that attribue name in the JVM.
+
+### Get a metric value
+
+```
+java -jar JMXQuery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -q "java.lang:type=ClassLoading/LoadedClassCount"
+```
+
+You can get multiple values by joining the mbeans together with semi colons.
+
+```
+java -jar JMXQuery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -q "java.lang:type=ClassLoading/LoadedClassCount;java.lang:type=ClassLoading/UnloadedClassCount"
+```
+
+Building the Jar
+----------------
+
+Simply run the ./build.sh, modifying the build parameters for your environment in the script. This will compile the code for Java 1.5 and build the Jar ready to run.
+
+License & Credits
+-----------------
+
+This tool was inspired by https://code.google.com/p/jmxquery/ but has been completely rewritten by David Gildeh from Outlyer (www.outlyer.com).
+
+It is licensed under the MIT License (https://opensource.org/licenses/MIT)
