@@ -1,46 +1,56 @@
 #!/usr/bin/env python3
 
 """
-    Python interface to JMX. Uses local jar to pass commands to JMX and read JSON
-    results returned.
+    Python interface to JMX. Uses local jar to pass commands to JMX.
+    Results returned.
 """
 
 import subprocess
 import os
 import json
-from typing import List
 from enum import Enum
 import logging
 
 # Full Path to Jar
-JAR_PATH = os.path.dirname(os.path.realpath(__file__)) + '/JMXQuery-0.1.8.jar'
+JAR_PATH = "%s/%s" % (
+    os.path.dirname(os.path.realpath(__file__)),
+    'JMXQuery-0.1.8.jar')
+
 # Default Java path
 DEFAULT_JAVA_PATH = 'java'
+
 # Default timeout for running jar in seconds
 DEFAULT_JAR_TIMEOUT = 10
 
-logger = logging.getLogger(__name__)
+logging.basicConfig()
+log = logging.getLogger('jmxQuery')
+
 
 class MetricType(Enum):
     COUNTER = 'counter'
     GAUGE = 'gauge'
 
+
 class JMXQuery:
     """
-    A JMX Query which is used to fetch specific MBean attributes/values from the JVM. The object_name can support wildcards
-    to pull multiple metrics at once, for example '*:*' will bring back all MBeans and attributes in the JVM with their values.
+    A JMX Query which is used to fetch specific MBean 
+    attributes/values from the JVM. The object_name 
+    can support wildcards to pull multiple metrics 
+    at once, for example '*:*' will bring back all 
+    MBeans and attributes in the JVM with their values.
 
-    You can set a metric name if you want to override the generated metric name created from the MBean path
+    You can set a metric name if you want to override 
+    the generated metric name created from the MBean path.
     """
 
     def __init__(self,
-                 mBeanName: str,
-                 attribute: str = None,
-                 attributeKey: str = None,
-                 value: object = None,
-                 value_type: str = None,
-                 metric_name: str = None,
-                 metric_labels: dict = None):
+        mBeanName=None,
+        attribute=None,
+        attributeKey=None,
+        value=None,
+        value_type=None,
+        metric_name=None,
+        metric_labels=None):
 
         self.mBeanName = mBeanName
         self.attribute = attribute
@@ -56,81 +66,94 @@ class JMXQuery:
 
         :return:    The query string to find the MBean in format:
 
-                        {mBeanName}/{attribute}/{attributeKey}
+                {mBeanName}/{attribute}/{attributeKey}
 
-                    Example: java.lang:type=Memory/HeapMemoryUsage/init
+                Example: java.lang:type=Memory/HeapMemoryUsage/init
         """
-        query = ""
+        query = []
         if self.metric_name:
-            query += self.metric_name
+            query.append(self.metric_name)
 
-            if ((self.metric_labels != None) and (len(self.metric_labels) > 0)):
-                query += "<"
-                keyCount = 0
-                for key, value in self.metric_labels.items():
-                    query += key + "=" + value
-                    keyCount += 1
-                    if keyCount < len(self.metric_labels):
-                        query += ","
-                query += ">"
-            query += "=="
+            if self.metric_labels != None:
+                 if len(self.metric_labels) > 0:
+                    query.append("<")
+                    keyCount = 0
+                    for key, value in self.metric_labels.items():
+                        query.append("%s = %s" % (
+                            key,
+                            value))
+                        keyCount += 1
+                        if keyCount < len(self.metric_labels):
+                            query.append(",")
+                    query.append(">")
+            query.append("==")
 
-        query += self.mBeanName
+        query.append(self.mBeanName)
         if self.attribute:
-            query += "/" + self.attribute
+            query.append("/%s" % (
+                self.attribute))
         if self.attributeKey:
-            query += "/" + self.attributeKey
+            query.append("/%s" % (
+                self.attributeKey))
 
-        return query
+        return ''.join(query)
 
     def to_string(self):
 
-        string = ""
+        data = []
         if self.metric_name:
-            string += self.metric_name
+            data.append(self.metric_name)
 
-            if ((self.metric_labels != None) and (len(self.metric_labels) > 0)):
-                string += " {"
-                keyCount = 0
-                for key, value in self.metric_labels.items():
-                    string += key + "=" + value
-                    keyCount += 1
-                    if keyCount < len(self.metric_labels):
-                        string += ","
-                string += "}"
+            if self.metric_labels != None:
+                if len(self.metric_labels) > 0:
+                    data.append(" {")
+                    keyCount = 0
+                    for key, value in self.metric_labels.items():
+                        data.append("%s = %s" % (
+                            key,
+                            value))
+                        keyCount += 1
+                        if keyCount < len(self.metric_labels):
+                            data.append(",")
+                    data.append("}")
         else:
-            string += self.mBeanName
+            data.append(self.mBeanName)
             if self.attribute:
-                string += "/" + self.attribute
+                data.append("/%s" % (
+                    self.attribute))
             if self.attributeKey:
-                string += "/" + self.attributeKey
+                data.append("/%s" % (
+                    self.attributeKey))
 
-        string += " = "
-        string += str(self.value) + " (" + self.value_type + ")"
+        data.append(" = ")
+        data.append("%s ( %s )" %(
+            str(self.value),
+            self.value_type))
 
-        return string
+        return ''.join(data)
 
 class JMXConnection(object):
     """
-    The main class that connects to the JMX endpoint via a local JAR to run queries
+    The main class that connects to the JMX endpoint via a local JAR 
+    to run queries
     """
-
-    def __init__(self, connection_uri: str, jmx_username: str = None, jmx_password: str = None, java_path: str = DEFAULT_JAVA_PATH):
+    def __init__(self, uri=None, user=None, passwd=None, jpath=None):
         """
         Creates instance of JMXQuery set to a specific connection uri for the JMX endpoint
 
-        :param connection_uri:  The JMX connection URL. E.g.  service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi
-        :param jmx_username:    (Optional) Username if JMX endpoint is secured
-        :param jmx_password:    (Optional) Password if JMX endpoint is secured
-        :param java_path:       (Optional) Provide an alternative Java path on the machine to run the JAR.
-                                Default is 'java' which will use the machines default JVM
+        :param uri:  The JMX connection URL. E.g.  
+                     service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi
+        :param user:    (Optional) Username if JMX endpoint is secured
+        :param passwd:  (Optional) Password if JMX endpoint is secured
+        :param jpath:    (Optional) Java path.  Default is 'java'
         """
-        self.connection_uri = connection_uri
-        self.jmx_username = jmx_username
-        self.jmx_password = jmx_password
-        self.java_path = java_path
 
-    def __run_jar(self, queries: List[JMXQuery], timeout) -> List[JMXQuery]:
+        self.connection_uri = uri
+        self.jmx_username = user
+        self.jmx_password = passwd
+        self.java_path = jpath
+
+    def run_jar(self, queries, timeout):
         """
         Run the JAR and return the results
 
@@ -138,16 +161,27 @@ class JMXConnection(object):
         :return:        The full command array to run via subprocess
         """
 
-        command =  [self.java_path, '-jar', JAR_PATH, '-url', self.connection_uri, "-json"]
-        if (self.jmx_username):
-            command.extend(["-u", self.jmx_username, "-p", self.jmx_password])
+        command =  [
+            self.java_path, 
+            '-jar', 
+            JAR_PATH, 
+            '-url', 
+            self.connection_uri, 
+            "-json"]
+
+        if self.jmx_username:
+            command.extend([
+                "-u", 
+                self.jmx_username, 
+                "-p", 
+                self.jmx_password])
 
         queryString = ""
         for query in queries:
             queryString += query.to_query_string() + ";"
 
         command.extend(["-q", queryString])
-        logger.debug("Running command: " + str(command))
+        log.debug("Running command: " + str(command))
 
         jsonOutput = "[]"
         try:
@@ -159,16 +193,21 @@ class JMXConnection(object):
 
             jsonOutput = output.stdout.decode('utf-8')
         except subprocess.TimeoutExpired as err:
-            logger.error("Error calling JMX, Timeout of " + str(err.timeout) + " Expired: " + err.output.decode('utf-8'))
-        except subprocess.CalledProcessError as err:
-            logger.error("Error calling JMX: " + err.output.decode('utf-8'))
-            raise err
+            log.error("Timeout of %s Expired: %s" % (
+                str(err.timeout),
+                err.output.decode('utf-8')))
 
-        logger.debug("JSON Output Received: " + jsonOutput)
-        metrics = self.__load_from_json(jsonOutput)
+        except subprocess.CalledProcessError as err:
+            log.error("Error calling JMX: %s" % (
+                err.output.decode('utf-8'))) 
+            raise
+
+        log.debug("JSON Output Received: %s" % jsonOutput)
+        metrics = self.load_from_json(jsonOutput)
+
         return metrics
 
-    def __load_from_json(self, jsonOutput: str) -> List[JMXQuery]:
+    def load_from_json(self, jsonOutput):
         """
         Loads the list of returned metrics from JSON response
 
@@ -177,31 +216,41 @@ class JMXConnection(object):
         """
         jsonMetrics = json.loads(jsonOutput)
         metrics = []
-        for jsonMetric in jsonMetrics:
-            mBeanName = jsonMetric['mBeanName']
-            attribute = jsonMetric['attribute']
-            attributeType = jsonMetric['attributeType']
-            metric_name = None
-            if 'metricName' in jsonMetric:
-                metric_name = jsonMetric['metricName']
-            metric_labels = None
-            if 'metricLabels' in jsonMetric:
-                metric_labels = jsonMetric['metricLabels']
-            attributeKey = None
-            if 'attributeKey' in jsonMetric:
-                attributeKey = jsonMetric['attributeKey']
-            value = None
-            if 'value' in jsonMetric:
-                value = jsonMetric['value']
 
-            metrics.append(JMXQuery(mBeanName, attribute, attributeKey, value, attributeType, metric_name, metric_labels))
+        for jm in jsonMetrics:
+            mBeanName = jm['mBeanName']
+            attribute = jm['attribute']
+            attributeType = jm['attributeType']
+            metric_name = None
+            if 'metricName' in jm:
+                metric_name = jm['metricName']
+            metric_labels = None
+            if 'metricLabels' in jm:
+                metric_labels = jm['metricLabels']
+            attributeKey = None
+            if 'attributeKey' in jm:
+                attributeKey = jm['attributeKey']
+            value = None
+            if 'value' in jm:
+                value = jm['value']
+
+            metrics.append(JMXQuery(
+                mBeanName, 
+                attribute, 
+                attributeKey, 
+                value, 
+                attributeType, 
+                metric_name, 
+                metric_labels))
+
         return metrics
 
-    def query(self, queries: List[JMXQuery], timeout=DEFAULT_JAR_TIMEOUT) -> List[JMXQuery]:
+    def query(self, queries, timeout=DEFAULT_JAR_TIMEOUT):
         """
         Run a list of JMX Queries against the JVM and get the results
 
-        :param queries:     A list of JMXQuerys to query the JVM for
-        :return:            A list of JMXQuerys found in the JVM with their current values
+        :param queries: A list of JMXQuerys to query the JVM for
+        :return: list of query results with their current values
         """
-        return self.__run_jar(queries, timeout)
+
+        return self.run_jar(queries, timeout)
