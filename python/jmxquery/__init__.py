@@ -33,13 +33,13 @@ class MetricType(Enum):
 
 class JMXQuery:
     """
-    A JMX Query which is used to fetch specific MBean 
-    attributes/values from the JVM. The object_name 
-    can support wildcards to pull multiple metrics 
-    at once, for example '*:*' will bring back all 
+    A JMX Query which is used to fetch specific MBean
+    attributes/values from the JVM. The object_name
+    can support wildcards to pull multiple metrics
+    at once, for example '*:*' will bring back all
     MBeans and attributes in the JVM with their values.
 
-    You can set a metric name if you want to override 
+    You can set a metric name if you want to override
     the generated metric name created from the MBean path.
     """
 
@@ -60,7 +60,7 @@ class JMXQuery:
         self.metric_name = metric_name
         self.metric_labels = metric_labels
 
-    def to_query_string(self) -> str:
+    def to_query_string(self):
         """
         Build a query string to pass via command line to JMXQuery Jar
 
@@ -139,10 +139,13 @@ class JMXConnection(object):
     """
     def __init__(self, uri=None, user=None, passwd=None, jpath=None):
         """
-        Creates instance of JMXQuery set to a specific connection uri for the JMX endpoint
+        Creates instance of JMXQuery set to a specific connection uri
+        for the JMX endpoint.
 
-        :param uri:  The JMX connection URL. E.g.  
-                     service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi
+        :param uri:  The JMX connection URL. E.g.
+
+            service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi
+
         :param user:    (Optional) Username if JMX endpoint is secured
         :param passwd:  (Optional) Password if JMX endpoint is secured
         :param jpath:    (Optional) Java path.  Default is 'java'
@@ -162,18 +165,18 @@ class JMXConnection(object):
         """
 
         command =  [
-            self.java_path, 
-            '-jar', 
-            JAR_PATH, 
-            '-url', 
-            self.connection_uri, 
+            self.java_path,
+            '-jar',
+            JAR_PATH,
+            '-url',
+            self.connection_uri,
             "-json"]
 
         if self.jmx_username:
             command.extend([
-                "-u", 
-                self.jmx_username, 
-                "-p", 
+                "-u",
+                self.jmx_username,
+                "-p",
                 self.jmx_password])
 
         queryString = ""
@@ -199,7 +202,7 @@ class JMXConnection(object):
 
         except subprocess.CalledProcessError as err:
             log.error("Error calling JMX: %s" % (
-                err.output.decode('utf-8'))) 
+                err.output.decode('utf-8')))
             raise
 
         log.debug("JSON Output Received: %s" % jsonOutput)
@@ -235,12 +238,12 @@ class JMXConnection(object):
                 value = jm['value']
 
             metrics.append(JMXQuery(
-                mBeanName, 
-                attribute, 
-                attributeKey, 
-                value, 
-                attributeType, 
-                metric_name, 
+                mBeanName,
+                attribute,
+                attributeKey,
+                value,
+                attributeType,
+                metric_name,
                 metric_labels))
 
         return metrics
