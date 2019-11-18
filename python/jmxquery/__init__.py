@@ -5,7 +5,7 @@
     Results returned.
 """
 
-import subprocess
+import subprocess32
 import os
 import json
 from enum import Enum
@@ -161,7 +161,7 @@ class JMXConnection(object):
         Run the JAR and return the results
 
         :param query:   The query
-        :return:        The full command array to run via subprocess
+        :return:        The full command array to run via subprocess32
         """
 
         command =  [
@@ -188,19 +188,19 @@ class JMXConnection(object):
 
         jsonOutput = "[]"
         try:
-            output = subprocess.run(command,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
+            output = subprocess32.run(command,
+                                    stdout=subprocess32.PIPE,
+                                    stderr=subprocess32.PIPE,
                                     timeout=timeout,
                                     check=True)
 
             jsonOutput = output.stdout.decode('utf-8')
-        except subprocess.TimeoutExpired as err:
+        except subprocess32.TimeoutExpired as err:
             log.error("Timeout of %s Expired: %s" % (
                 str(err.timeout),
                 err.output.decode('utf-8')))
 
-        except subprocess.CalledProcessError as err:
+        except subprocess32.CalledProcessError as err:
             log.error("Error calling JMX: %s" % (
                 err.output.decode('utf-8')))
             raise
