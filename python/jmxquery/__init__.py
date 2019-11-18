@@ -63,25 +63,23 @@ class JMXQuery:
     def to_query_string(self):
         """
         Build a query string to pass via command line to JMXQuery Jar
-
         :return:    The query string to find the MBean in format:
-
-                {mBeanName}/{attribute}/{attributeKey}
-
-                Example: java.lang:type=Memory/HeapMemoryUsage/init
+                        {mBeanName}/{attribute}/{attributeKey}
+                    Example: java.lang:type=Memory/HeapMemoryUsage/init
         """
         query = []
         if self.metric_name:
             query.append(self.metric_name)
 
             if self.metric_labels != None:
-                 if len(self.metric_labels) > 0:
+                if len(self.metric_labels) > 0:
                     query.append("<")
                     keyCount = 0
                     for key, value in self.metric_labels.items():
                         query.append("%s = %s" % (
                             key,
-                            value))
+                            value
+                        ))
                         keyCount += 1
                         if keyCount < len(self.metric_labels):
                             query.append(",")
@@ -90,47 +88,42 @@ class JMXQuery:
 
         query.append(self.mBeanName)
         if self.attribute:
-            query.append("/%s" % (
-                self.attribute))
+            query.append("/%s" % self.attribute)
         if self.attributeKey:
-            query.append("/%s" % (
-                self.attributeKey))
+            query.append("/%s" % self.attributeKey)
 
-        return ' '.join(query)
+        return ''.join(query)
 
     def to_string(self):
 
-        data = []
+        string = []
         if self.metric_name:
-            data.append(self.metric_name)
+            string.append(self.metric_name)
 
             if self.metric_labels != None:
                 if len(self.metric_labels) > 0:
-                    data.append(" {")
+                    string.append(" {")
                     keyCount = 0
                     for key, value in self.metric_labels.items():
-                        data.append("%s = %s" % (
+                        string.append("%s = %s" % (
                             key,
-                            value))
+                            value
+                        ))
                         keyCount += 1
                         if keyCount < len(self.metric_labels):
-                            data.append(",")
-                    data.append("}")
+                            string.append(",")
+                    string.append("}")
         else:
-            data.append(self.mBeanName)
+            string.append(self.mBeanName)
             if self.attribute:
-                data.append("/%s" % (
-                    self.attribute))
+                string.append("/%s" % self.attribute)
             if self.attributeKey:
-                data.append("/%s" % (
-                    self.attributeKey))
+                string.append("/%s" % self.attributeKey)
 
-        data.append(" = ")
-        data.append("%s ( %s )" %(
-            str(self.value),
-            self.value_type))
+        string.append(" = ")
+        string.append("%s  ( %s )")
 
-        return ' '.join(data)
+        return ''.join(string)
 
 class JMXConnection(object):
     """
@@ -204,6 +197,7 @@ class JMXConnection(object):
         except subprocess32.CalledProcessError as err:
             log.error("Error calling JMX: %s" % (
                 err))
+
             raise
 
         except Exception as err:
