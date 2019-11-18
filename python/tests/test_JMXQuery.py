@@ -126,8 +126,16 @@ def test_threading():
 def printMetrics(metrics):
     for metric in metrics:
         if metric.metric_name:
-            print(f"{metric.metric_name}<{metric.metric_labels}> == {metric.value}")
+            print("{%s}<{%s}> == {%s}" % (
+                metric.metric_name,
+                metric.metric_labels,
+                metric.value
+            ))
         else:
-            print(f"{metric.to_query_string()} ({metric.value_type}) = {metric.value}")
+            print("{%s} ({%s}) = {%s}" % (
+                metric.to_query_string,
+                metric.value_type,
+                metric.value
+            ))
 
     print("===================\nTotal Metrics: " + str(len(metrics)))

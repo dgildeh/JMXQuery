@@ -96,7 +96,7 @@ class JMXQuery:
             query.append("/%s" % (
                 self.attributeKey))
 
-        return ''.join(query)
+        return ' '.join(query)
 
     def to_string(self):
 
@@ -130,14 +130,14 @@ class JMXQuery:
             str(self.value),
             self.value_type))
 
-        return ''.join(data)
+        return ' '.join(data)
 
 class JMXConnection(object):
     """
     The main class that connects to the JMX endpoint via a local JAR 
     to run queries
     """
-    def __init__(self, uri=None, user=None, passwd=None, jpath=None):
+    def __init__(self, uri=None, user=None, passwd=None, jpath=DEFAULT_JAVA_PATH):
         """
         Creates instance of JMXQuery set to a specific connection uri
         for the JMX endpoint.
@@ -185,6 +185,7 @@ class JMXConnection(object):
 
         command.extend(["-q", queryString])
         log.debug("Running command: " + str(command))
+        print("Running command: %s" % str(command))
 
         jsonOutput = "[]"
         try:
@@ -198,11 +199,15 @@ class JMXConnection(object):
         except subprocess32.TimeoutExpired as err:
             log.error("Timeout of %s Expired: %s" % (
                 str(err.timeout),
-                err.output.decode('utf-8')))
+                err))
 
         except subprocess32.CalledProcessError as err:
             log.error("Error calling JMX: %s" % (
-                err.output.decode('utf-8')))
+                err))
+            raise
+
+        except Exception as err:
+            log.error("Exception: %s" % err)
             raise
 
         log.debug("JSON Output Received: %s" % jsonOutput)
