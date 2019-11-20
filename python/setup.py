@@ -22,7 +22,8 @@ setup(
   name = 'jmxquery',
   packages = ['jmxquery'],
   install_requires = [
-    'subprocess32'
+    'subprocess32; python_version < "3.5"',
+    'enum34; python_version < "3.4"'
   ],
   version = '0.6.0',
   description = 'A JMX Interface for Python to Query runtime metrics in a JVM',

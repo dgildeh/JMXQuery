@@ -4,8 +4,10 @@
     Python interface to JMX. Uses local jar to pass commands to JMX.
     Results returned.
 """
-
-import subprocess32
+try:
+    import subprocess32 as subprocess
+except:
+    import subprocess
 import os
 import json
 from enum import Enum
@@ -157,7 +159,7 @@ class JMXConnection(object):
         Run the JAR and return the results
 
         :param query:  The query
-        :return:       The full command array to run via subprocess32
+        :return:       The full command array to run via subprocess
         """
 
         command =  [
@@ -175,24 +177,20 @@ class JMXConnection(object):
                 "-p",
                 self.jmx_password])
 
-        queryString = ""
+        queryString = []
         for query in queries:
-            queryString += query.to_query_string() + ";"
+            queryString.append("%s;" % query.to_query_string())
 
-        command.extend(["-q", queryString])
+        command.extend(["-q", ''.join(queryString)])
 
         jsonOutput = "[]"
-        try:
-            output = subprocess32.run(command,
-                                    stdout=subprocess32.PIPE,
-                                    stderr=subprocess32.PIPE,
-                                    timeout=timeout,
-                                    check=True)
+        output = subprocess.run(command,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                timeout=timeout,
+                                check=True)
 
-            jsonOutput = output.stdout.decode('utf-8')
-        except Exception as err:
-            log.error("Exception: %s" % err)
-            raise
+        jsonOutput = output.stdout.decode('utf-8')
 
         metrics = self.load_from_json(jsonOutput)
 
