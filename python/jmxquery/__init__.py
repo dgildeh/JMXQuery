@@ -12,17 +12,15 @@ from enum import Enum
 import logging
 
 # Full Path to Jar
-JAR_PATH = "%s/%s" % (
+JAR_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
-    'JMXQuery-0.1.8.jar')
+    'JMXQuery-0.1.8.jar'
+    )
 
-# Default Java path
+# Default Java path and default timeout in seconds
 DEFAULT_JAVA_PATH = 'java'
-
-# Default timeout for running jar in seconds
 DEFAULT_JAR_TIMEOUT = 10
 
-logging.basicConfig()
 log = logging.getLogger('jmxQuery')
 
 
@@ -58,32 +56,34 @@ class JMXQuery:
         self.value = value
         self.value_type = value_type
         self.metric_name = metric_name
-        self.metric_labels = metric_labels
+        self.metric_labels = metric_labels or {}
 
     def to_query_string(self):
         """
         Build a query string to pass via command line to JMXQuery Jar
         :return:    The query string to find the MBean in format:
+            
                         {mBeanName}/{attribute}/{attributeKey}
-                    Example: java.lang:type=Memory/HeapMemoryUsage/init
+            
+            Example: java.lang:type=Memory/HeapMemoryUsage/init
         """
         query = []
         if self.metric_name:
             query.append(self.metric_name)
-
-            if self.metric_labels != None:
-                if len(self.metric_labels) > 0:
-                    query.append("<")
-                    keyCount = 0
-                    for key, value in self.metric_labels.items():
-                        query.append("%s = %s" % (
-                            key,
-                            value
-                        ))
-                        keyCount += 1
-                        if keyCount < len(self.metric_labels):
-                            query.append(",")
-                    query.append(">")
+            if self.metric_labels:
+                query.append("<")
+                total_count = len(self.metric_labels)
+                for count, (key, value) in enumerate(
+                    self.metric_labels.items(), 
+                    1
+                    ):
+                    query.append("{} = {}".format(
+                        key, 
+                        value)
+                        )
+                    if count < total_count:
+                        query.append(",")
+                query.append(">")
             query.append("==")
 
         query.append(self.mBeanName)
@@ -95,24 +95,20 @@ class JMXQuery:
         return ''.join(query)
 
     def to_string(self):
-
         string = []
         if self.metric_name:
             string.append(self.metric_name)
-
-            if self.metric_labels != None:
-                if len(self.metric_labels) > 0:
-                    string.append(" {")
-                    keyCount = 0
-                    for key, value in self.metric_labels.items():
-                        string.append("%s = %s" % (
-                            key,
-                            value
-                        ))
-                        keyCount += 1
-                        if keyCount < len(self.metric_labels):
-                            string.append(",")
-                    string.append("}")
+            if self.metric_labels:
+                string.append(" {")
+                total_count = len(self.metric_labels)
+                for count, (key, value) in enumerate(
+                    self.metric_labels.items(), 
+                    1
+                    ):
+                    string.append("{} = {}".format(key, value))
+                    if count < total_count:
+                        string.append(",")
+                string.append("}")
         else:
             string.append(self.mBeanName)
             if self.attribute:
@@ -121,7 +117,10 @@ class JMXQuery:
                 string.append("/%s" % self.attributeKey)
 
         string.append(" = ")
-        string.append("%s  ( %s )")
+        string.append("%s  ( %s )" % (
+            self.value,
+            self.value_type
+        ))
 
         return ''.join(string)
 
@@ -130,7 +129,11 @@ class JMXConnection(object):
     The main class that connects to the JMX endpoint via a local JAR 
     to run queries
     """
-    def __init__(self, uri=None, user=None, passwd=None, jpath=DEFAULT_JAVA_PATH):
+    def __init__(self, 
+        uri=None,
+        user=None,
+        passwd=None,
+        jpath=DEFAULT_JAVA_PATH):
         """
         Creates instance of JMXQuery set to a specific connection uri
         for the JMX endpoint.
@@ -153,8 +156,8 @@ class JMXConnection(object):
         """
         Run the JAR and return the results
 
-        :param query:   The query
-        :return:        The full command array to run via subprocess32
+        :param query:  The query
+        :return:       The full command array to run via subprocess32
         """
 
         command =  [
@@ -177,8 +180,6 @@ class JMXConnection(object):
             queryString += query.to_query_string() + ";"
 
         command.extend(["-q", queryString])
-        log.debug("Running command: " + str(command))
-        print("Running command: %s" % str(command))
 
         jsonOutput = "[]"
         try:
@@ -189,22 +190,10 @@ class JMXConnection(object):
                                     check=True)
 
             jsonOutput = output.stdout.decode('utf-8')
-        except subprocess32.TimeoutExpired as err:
-            log.error("Timeout of %s Expired: %s" % (
-                str(err.timeout),
-                err))
-
-        except subprocess32.CalledProcessError as err:
-            log.error("Error calling JMX: %s" % (
-                err))
-
-            raise
-
         except Exception as err:
             log.error("Exception: %s" % err)
             raise
 
-        log.debug("JSON Output Received: %s" % jsonOutput)
         metrics = self.load_from_json(jsonOutput)
 
         return metrics
