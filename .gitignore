@@ -14,3 +14,7 @@ nbactions.xml
 *.log
 MANIFEST
 python/jmxquery.egg-info/
+.vscode/
+venv/
+venv3/
+*.pyc

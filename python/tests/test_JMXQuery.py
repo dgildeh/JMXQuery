@@ -5,6 +5,7 @@ when running these tests:
     docker-compose -f docker-compose-kafka.yaml up
 
 """
+from __future__ import print_function
 import logging, sys
 import threading
 from nose.tools import assert_greater_equal
@@ -126,8 +127,16 @@ def test_threading():
 def printMetrics(metrics):
     for metric in metrics:
         if metric.metric_name:
-            print(f"{metric.metric_name}<{metric.metric_labels}> == {metric.value}")
+            print("{%s}<{%s}> == {%s}" % (
+                metric.metric_name,
+                metric.metric_labels,
+                metric.value
+            ))
         else:
-            print(f"{metric.to_query_string()} ({metric.value_type}) = {metric.value}")
+            print("{%s} ({%s}) = {%s}" % (
+                metric.to_query_string(),
+                metric.value_type,
+                metric.value
+            ))
 
     print("===================\nTotal Metrics: " + str(len(metrics)))
