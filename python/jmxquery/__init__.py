@@ -25,6 +25,10 @@ class MetricType(Enum):
     COUNTER = 'counter'
     GAUGE = 'gauge'
 
+class NotStrictJSONDecoder(json.JSONDecoder):
+    def __init__(self, strict=False, *args, **kwargs):
+        json.JSONDecoder.__init__(self, strict=False, *args, **kwargs)
+
 class JMXQuery:
     """
     A JMX Query which is used to fetch specific MBean attributes/values from the JVM. The object_name can support wildcards
@@ -175,7 +179,7 @@ class JMXConnection(object):
         :param jsonOutput:  The JSON Array returned from the command line
         :return:            An array of JMXQuerys
         """
-        jsonMetrics = json.loads(jsonOutput)
+        jsonMetrics = json.loads(jsonOutput, cls=NotStrictJSONDecoder)
         metrics = []
         for jsonMetric in jsonMetrics:
             mBeanName = jsonMetric['mBeanName']
