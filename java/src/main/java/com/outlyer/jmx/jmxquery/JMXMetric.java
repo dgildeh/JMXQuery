@@ -332,7 +332,7 @@ public class JMXMetric {
                     (this.value instanceof Boolean)) {
                 json += ", \"value\" : " + this.value.toString();
             } else {
-                json += ", \"value\" : \"" + this.value.toString() + "\"";
+                json += ", \"value\" : \"" + this.value.toString().replace("\"", "\\\"") + "\"";
             }
         }
         json += "}";
