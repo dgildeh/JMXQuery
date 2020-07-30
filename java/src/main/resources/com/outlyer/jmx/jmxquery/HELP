@@ -1,4 +1,4 @@
-Usage: jmxquery [-url] [-username,u] [-password,p] [-query,q] [-incjvm] [-json] [-help]
+Usage: jmxquery [-url] [-username,u] [-password,p] [-query,q] [-incjvm] [-json] [-count] [-every] [-help]
 
 options are:
 
@@ -28,3 +28,10 @@ options are:
 -json
         Will output everything in JSON format, otherwise will be human readable text. Useful
         for passing output to scripts.
+        
+-count  n 
+        Loop this many times doing the query.  It adds the following fields to the data
+        Date, time, time since start, loop counter 
+        
+-every n
+       Wait for this interval between loops.  The default is 10 seconds             

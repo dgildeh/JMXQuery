@@ -15,6 +15,7 @@ import javax.management.openmbean.TabularDataSupport;
  * E.g. jvm.memory.heap.used<>=java.lang:type=Memory/HeapMemoryUsage/used
  * 
  * @author David Gildeh (www.outlyer.com)
+ * Updated Colin Paice to prefix JSON with da
  */
 public class JMXMetric {
     
@@ -296,11 +297,11 @@ public class JMXMetric {
     }
     
     /**
-     * Returns JSON representation of metric
+     * Returns JSON representation of metric, appended with any additional values passed in
      * 
      * @return  JSON String
      */
-    public String toJSON() {
+    public String toJSON(String[] passedStrings) {
 
         String beanName = this.mBeanName.replace("\"", "\\\"");
 
@@ -334,7 +335,13 @@ public class JMXMetric {
             } else {
                 json += ", \"value\" : \"" + this.value.toString() + "\"";
             }
+        } 
+        // add any passed in values
+        for (int iStringArray =0; iStringArray < passedStrings.length; iStringArray++)
+        {
+            json += ","+passedStrings[iStringArray];      
         }
+
         json += "}";
 
         return json;

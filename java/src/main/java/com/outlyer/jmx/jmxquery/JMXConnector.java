@@ -3,7 +3,7 @@ package com.outlyer.jmx.jmxquery;
 import com.outlyer.jmx.jmxquery.tools.JMXTools;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+// import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -28,6 +28,7 @@ import javax.management.remote.JMXServiceURL;
  * JMX interface for values
  * 
  * @author David Gildeh (www.outlyer.com)
+ * Additions by Colin Paice
  */
 public class JMXConnector {
     
@@ -240,7 +241,13 @@ public class JMXConnector {
                     foundKey.setAttributeType(cData.get(attribute.getAttributeKey()));
                     foundKey.setmetricName(attribute.getmetricName());
                     foundKey.setmetricLabels(attribute.getmetricLabels()); 
-                    attributes.addAll(getAttributes(foundKey, cData.get(attribute.getAttributeKey())));                    
+                    //  Fix recursive, endless loop if attribute is missing
+                    //  Specify" Missing instead of calling itself again
+                    Object oValue = cData.get(attribute.getAttributeKey());
+                    if (oValue == null) oValue = "Missing";
+                    attributes.addAll(getAttributes(foundKey, oValue));
+                    // previous was
+                    // attributes.addAll(getAttributes(foundKey, cData.get(attribute.getAttributeKey())));                    
                 } catch (InvalidKeyException e) {
                     // Key doesn't exist so don't add to list
                 }    
