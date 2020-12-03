@@ -7,8 +7,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import javax.management.Attribute;
+import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
+import javax.management.InvalidAttributeValueException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanException;
 import javax.management.MBeanInfo;
@@ -137,6 +140,32 @@ public class JMXConnector {
         return connection.invoke(new ObjectName(objectName), method, args, signatures);
     }
 
+    /**
+     * set an attribute on the server using JMX
+     * 
+     * @param name
+     *            - The object name of the MBean on which the method is to be
+     *            invoked.
+     * @param field
+     *            - The name of the field to be invoked.
+     * @param value
+     *            - A value of type parameter
+     * @return void
+     * @throws java.io.IOException
+     * @throws javax.management.MalformedObjectNameException
+     * @throws javax.management.InstanceNotFoundException
+     * @throws javax.management.IntrospectionException
+     * @throws javax.management.ReflectionException
+     * @throws MBeanException
+     * @throws InvalidAttributeValueException 
+     * @throws AttributeNotFoundException 
+     */
+    public void set(String objectName, String field, Object value)
+            throws IOException, MalformedObjectNameException, InstanceNotFoundException, IntrospectionException,
+            ReflectionException, MBeanException, AttributeNotFoundException, InvalidAttributeValueException {
+        connection.setAttribute(new ObjectName(objectName), new Attribute(field,value));
+    }
+    
     /**
      * query the actual name of the MBean
      * 

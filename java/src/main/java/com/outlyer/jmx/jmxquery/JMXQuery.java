@@ -13,6 +13,8 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.outlyer.jmx.jmxquery.object.JMXAttribute;
+import com.outlyer.jmx.jmxquery.object.JMXMethod;
 /**
  *
  * JMXQuery is used for local or remote request of JMX attributes
@@ -31,7 +33,8 @@ public class JMXQuery {
     String password = null;
     boolean outputJSON = false;
 
-	JMXMethod methodInvoke = null;
+    JMXMethod methodInvoke = null;
+    JMXAttribute setterInvoke = null;
     /**
      * @param args
      */
@@ -56,6 +59,15 @@ public class JMXQuery {
         
         // Process Query
         try {
+            // Set attribute
+            if (query.setterInvoke != null) {
+                ObjectName objName = query.connector.queryName(query.setterInvoke.getObjectName());
+
+                query.connector.set(objName.getCanonicalName(), query.setterInvoke.getName(),
+                        query.setterInvoke.getTypedValue());
+                query.connector.disconnect();
+                return;
+            }
             // Method invoke
             if (query.methodInvoke != null) {
                 ObjectName objName = query.connector.queryName(query.methodInvoke.getObjectName());
@@ -227,6 +239,11 @@ public class JMXQuery {
                     byte[] decodedBytes = Base64.getDecoder().decode(args[++i]);
                     String decodedString = new String(decodedBytes);
                     methodInvoke = objectMapper.readValue(decodedString, JMXMethod.class);
+                } else if (option.equals("-set") || option.equals("-s")) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    byte[] decodedBytes = Base64.getDecoder().decode(args[++i]);
+                    String decodedString = new String(decodedBytes);
+                    setterInvoke = objectMapper.readValue(decodedString, JMXAttribute.class);
                 } else if (option.equals("-json")) {
                     outputJSON = true;
                 } else if (option.equals("-incjvm")) {

@@ -11,7 +11,8 @@ public interface TestMBean {
     
     public int valueInt(); 
 
-    public void setInt(Integer i); 
+    public void setVal(final int val); 
+    public int getVal();
    
     public String valueString(String str);
 	String[] getNames();

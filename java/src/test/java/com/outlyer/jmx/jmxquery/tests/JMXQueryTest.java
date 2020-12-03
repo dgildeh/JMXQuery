@@ -2,8 +2,11 @@ package com.outlyer.jmx.jmxquery.tests;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.outlyer.jmx.jmxquery.JMXMethod;
 import com.outlyer.jmx.jmxquery.JMXQuery;
+import com.outlyer.jmx.jmxquery.object.JMXAttribute;
+import com.outlyer.jmx.jmxquery.object.JMXMethod;
+import com.outlyer.jmx.jmxquery.object.JMXObject;
+import com.outlyer.jmx.jmxquery.object.JMXParam;
 import com.outlyer.jmx.jmxquery.tools.JMXTools;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -148,6 +151,17 @@ public class JMXQueryTest {
     }
 
     @Test
+    public void testSetIntegerValue() throws Exception {
+        JMXAttribute attribute = new JMXAttribute();
+        attribute.setName("Val");
+        attribute.setObjectName("com.outlyer.jmx.jmxquery.app.tests:type=Test");
+        attribute.setValue(new JMXParam(23, "Integer"));
+        invokeSetter(attribute);
+        JMXQuery.main(new String[] { "-url", "service:jmx:rmi://localhost:12345/jndi/rmi://localhost:12345/jmxrmi",
+                "-q", "com.outlyer.jmx.jmxquery.app.tests:type=Test/Val" });
+    }
+    
+    @Test
     public void testInvokeAddStringString() throws Exception {
         JMXMethod method = new JMXMethod();
         method.setName("add");
@@ -158,11 +172,11 @@ public class JMXQueryTest {
         invokeMethod(method);
     }
 
-    private static final String serialze(JMXMethod method) {
+    private static final String serialze(JMXObject object) {
         ObjectMapper objectMapper = new ObjectMapper();
         String originalInput = null;
         try {
-            originalInput = objectMapper.writeValueAsString(method);
+            originalInput = objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -176,5 +190,11 @@ public class JMXQueryTest {
         String encodedString = serialze(method);
         JMXQuery.main(new String[] { "-url", "service:jmx:rmi://localhost:12345/jndi/rmi://localhost:12345/jmxrmi",
                 "-c", encodedString });
+    }
+    
+    private static void invokeSetter(JMXAttribute attribute) throws Exception {
+        String encodedString = serialze(attribute);
+        JMXQuery.main(new String[] { "-url", "service:jmx:rmi://localhost:12345/jndi/rmi://localhost:12345/jmxrmi",
+                "-s", encodedString });
     }
 }
