@@ -10,7 +10,7 @@ Usage
 ------
 
 ```
-jmxquery [-url] [-username,u] [-password,p] [-query,q] [-incjvm] [-json] [-help]
+jmxquery [-url] [-username,u] [-password,p] [-query,q] [-call,c] [-incjvm] [-json] [-help]
 ```
 
 options are:
@@ -33,6 +33,12 @@ options are:
         {attributeKey} is optional and only used for Composite metric types. 
         Use semi-colon to separate metrics.
 
+-call, c
+		Call a method using a base64 encoded JSON as parameter
+		JSON format: 
+		{"objectName":"{mBeanName}","name":"{methodName}","params":[{"value":"{value}","type":"{type}"},...]}
+		Supported types: char, short, int, long, boolean, double, float, String, Float, Double, Short, Int, Long
+		
 -incjvm
         Will add all standard JVM metrics to the -metrics query if used under java.lang domain
         Useful utility function to add JVM metrics quickly and also for testing connections if
@@ -79,6 +85,12 @@ You can get multiple values by joining the mbeans together with semi colons.
 java -jar JMXQuery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -q "java.lang:type=ClassLoading/LoadedClassCount;java.lang:type=ClassLoading/UnloadedClassCount"
 ```
 
+```
+Invoke the add method: {"objectName":"com.outlyer.jmx.jmxquery.app.tests:type=Test","name":"add","params":[{"value":"Test ","type":"String"},{"value":"test","type":"String"}]}
+
+java -jar JMXQuery.jar -url service:jmx:rmi:///jndi/rmi://localhost:1616/jmxrmi -c eyJvYmplY3ROYW1lIjoiY29tLm91dGx5ZXIuam14LmpteHF1ZXJ5LmFwcC50ZXN0czp0eXBlPVRlc3QiLCJuYW1lIjoiYWRkIiwicGFyYW1zIjpbeyJ2YWx1ZSI6IlRlc3QgIiwidHlwZSI6IlN0cmluZyJ9LHsidmFsdWUiOiJ0ZXN0IiwidHlwZSI6IlN0cmluZyJ9XX0=
+
+```
 Building the Jar
 ----------------
 

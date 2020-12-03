@@ -3,14 +3,17 @@ package com.outlyer.jmx.jmxquery;
 import com.outlyer.jmx.jmxquery.tools.JMXTools;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import javax.management.Attribute;
+import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
+import javax.management.InvalidAttributeValueException;
 import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
@@ -108,6 +111,74 @@ public class JMXConnector {
         }
     }
     
+    /**
+     * invokes a method on the server using JMX
+     * 
+     * @param name
+     *            - The object name of the MBean on which the method is to be
+     *            invoked.
+     * @param method
+     *            - The name of the method to be invoked.
+     * @param args
+     *            - An array containing the arguments of the method to be set
+     *            when the operation is invoked
+     * @param signatures
+     *            - An array containing the signatures of the arguments, an
+     *            array of class names in the format returned by
+     *            Class.getName().
+     * @return result of invoking the operation on the MBean specified
+     * @throws java.io.IOException
+     * @throws javax.management.MalformedObjectNameException
+     * @throws javax.management.InstanceNotFoundException
+     * @throws javax.management.IntrospectionException
+     * @throws javax.management.ReflectionException
+     * @throws MBeanException
+     */
+    public Object invoke(String objectName, String method, Object[] args, String[] signatures)
+            throws IOException, MalformedObjectNameException, InstanceNotFoundException, IntrospectionException,
+            ReflectionException, MBeanException {
+        return connection.invoke(new ObjectName(objectName), method, args, signatures);
+    }
+
+    /**
+     * set an attribute on the server using JMX
+     * 
+     * @param name
+     *            - The object name of the MBean on which the method is to be
+     *            invoked.
+     * @param field
+     *            - The name of the field to be invoked.
+     * @param value
+     *            - A value of type parameter
+     * @return void
+     * @throws java.io.IOException
+     * @throws javax.management.MalformedObjectNameException
+     * @throws javax.management.InstanceNotFoundException
+     * @throws javax.management.IntrospectionException
+     * @throws javax.management.ReflectionException
+     * @throws MBeanException
+     * @throws InvalidAttributeValueException 
+     * @throws AttributeNotFoundException 
+     */
+    public void set(String objectName, String field, Object value)
+            throws IOException, MalformedObjectNameException, InstanceNotFoundException, IntrospectionException,
+            ReflectionException, MBeanException, AttributeNotFoundException, InvalidAttributeValueException {
+        connection.setAttribute(new ObjectName(objectName), new Attribute(field,value));
+    }
+    
+    /**
+     * query the actual name of the MBean
+     * 
+     * @param name
+     *            - The object search string.
+     * @return actual name of the MBean
+     * @throws java.io.IOException
+     * @throws javax.management.MalformedObjectNameException
+     */
+    public ObjectName queryName(String name) throws MalformedObjectNameException, IOException {
+        return connection.queryNames(new ObjectName(name), null).iterator().next();
+    }
+
     /**
      * Fetches a list of metrics and their values in one go
      * 

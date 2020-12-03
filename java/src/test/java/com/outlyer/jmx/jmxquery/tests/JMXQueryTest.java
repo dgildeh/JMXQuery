@@ -1,14 +1,20 @@
 package com.outlyer.jmx.jmxquery.tests;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.outlyer.jmx.jmxquery.JMXQuery;
+import com.outlyer.jmx.jmxquery.object.JMXAttribute;
+import com.outlyer.jmx.jmxquery.object.JMXMethod;
+import com.outlyer.jmx.jmxquery.object.JMXObject;
+import com.outlyer.jmx.jmxquery.object.JMXParam;
 import com.outlyer.jmx.jmxquery.tools.JMXTools;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
+import java.util.Base64;
 /**
  * Runs set of tests for JMXQuery command line tool
  * 
@@ -35,6 +41,20 @@ public class JMXQueryTest {
     public void tearDown() {
     }
 
+    @Test
+    public void testArrayAttribute() throws Exception {
+        JMXQuery.main(new String[] { "-url", "service:jmx:rmi://localhost:12345/jndi/rmi://localhost:12345/jmxrmi",
+                "-q", "com.outlyer.jmx.jmxquery.app.tests:type=Test/Names" });
+
+    }
+
+    @Test
+    public void testArrayAttributeJSON() throws Exception {
+        JMXQuery.main(new String[] { "-url", "service:jmx:rmi://localhost:12345/jndi/rmi://localhost:12345/jmxrmi",
+                "-q", "-json", "com.outlyer.jmx.jmxquery.app.tests:type=Test/Names" });
+
+    }
+    
     @Test
     public void testHelpPage() throws Exception {
         //JMXQuery.main(new String[]{"-help"});
@@ -78,5 +98,103 @@ public class JMXQueryTest {
         System.out.println(url);
         
         JMXQuery.main(new String[]{"-url", url, "-list", "mbeans", "*:*"});
+    }
+
+    @Test
+    public void testInvokeSayHello() throws Exception {
+        JMXMethod method = new JMXMethod();
+        method.setName("sayHello");
+        method.setObjectName("com.outlyer.jmx.jmxquery.app.tests:type=Test");
+
+        invokeMethod(method);
+    }
+
+    @Test
+    public void testInvokeValue() throws Exception {
+        JMXMethod method = new JMXMethod();
+        method.setName("value");
+        method.setObjectName("com.outlyer.jmx.jmxquery.app.tests:type=Test");
+
+        invokeMethod(method);
+    }
+
+    @Test
+    public void testInvokeGetString() throws Exception {
+        JMXMethod method = new JMXMethod();
+        method.setName("valueString");
+        method.setObjectName("com.outlyer.jmx.jmxquery.app.tests:type=Test");
+        method.addParam("String\r\nok; hello test", "String");
+
+        invokeMethod(method);
+    }
+
+    @Test
+    public void testInvokeAddIntInt() throws Exception {
+        JMXMethod method = new JMXMethod();
+        method.setName("add");
+        method.setObjectName("com.outlyer.jmx.jmxquery.app.tests:type=Test");
+        method.addParam(23, "int");
+        method.addParam(25, "int");
+
+        invokeMethod(method);
+    }
+
+    @Test
+    public void testInvokeAddDoubleInt() throws Exception {
+        JMXMethod method = new JMXMethod();
+        method.setName("add");
+        method.setObjectName("com.outlyer.jmx.jmxquery.app.tests:type=Test");
+        method.addParam(23.3, "Double");
+        method.addParam(25, "int");
+
+        invokeMethod(method);
+    }
+
+    @Test
+    public void testSetIntegerValue() throws Exception {
+        JMXAttribute attribute = new JMXAttribute();
+        attribute.setName("Val");
+        attribute.setObjectName("com.outlyer.jmx.jmxquery.app.tests:type=Test");
+        attribute.setValue(new JMXParam(23, "Integer"));
+        invokeSetter(attribute);
+        JMXQuery.main(new String[] { "-url", "service:jmx:rmi://localhost:12345/jndi/rmi://localhost:12345/jmxrmi",
+                "-q", "com.outlyer.jmx.jmxquery.app.tests:type=Test/Val" });
+    }
+    
+    @Test
+    public void testInvokeAddStringString() throws Exception {
+        JMXMethod method = new JMXMethod();
+        method.setName("add");
+        method.setObjectName("com.outlyer.jmx.jmxquery.app.tests:type=Test");
+        method.addParam("Test ", "String");
+        method.addParam("test", "String");
+
+        invokeMethod(method);
+    }
+
+    private static final String serialze(JMXObject object) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String originalInput = null;
+        try {
+            originalInput = objectMapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        System.out.println(originalInput);
+        String encodedString = Base64.getEncoder().encodeToString(originalInput.getBytes());
+        System.out.println(encodedString);
+        return encodedString;
+    }
+
+    private static void invokeMethod(JMXMethod method) throws Exception {
+        String encodedString = serialze(method);
+        JMXQuery.main(new String[] { "-url", "service:jmx:rmi://localhost:12345/jndi/rmi://localhost:12345/jmxrmi",
+                "-c", encodedString });
+    }
+    
+    private static void invokeSetter(JMXAttribute attribute) throws Exception {
+        String encodedString = serialze(attribute);
+        JMXQuery.main(new String[] { "-url", "service:jmx:rmi://localhost:12345/jndi/rmi://localhost:12345/jmxrmi",
+                "-s", encodedString });
     }
 }

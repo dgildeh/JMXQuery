@@ -5,11 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.management.MalformedObjectNameException;
+import java.util.Base64;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.outlyer.jmx.jmxquery.object.JMXAttribute;
+import com.outlyer.jmx.jmxquery.object.JMXMethod;
 /**
  *
  * JMXQuery is used for local or remote request of JMX attributes
@@ -28,6 +33,8 @@ public class JMXQuery {
     String password = null;
     boolean outputJSON = false;
 
+    JMXMethod methodInvoke = null;
+    JMXAttribute setterInvoke = null;
     /**
      * @param args
      */
@@ -52,6 +59,33 @@ public class JMXQuery {
         
         // Process Query
         try {
+            // Set attribute
+            if (query.setterInvoke != null) {
+                ObjectName objName = query.connector.queryName(query.setterInvoke.getObjectName());
+
+                query.connector.set(objName.getCanonicalName(), query.setterInvoke.getName(),
+                        query.setterInvoke.getTypedValue());
+                query.connector.disconnect();
+                return;
+            }
+            // Method invoke
+            if (query.methodInvoke != null) {
+                ObjectName objName = query.connector.queryName(query.methodInvoke.getObjectName());
+
+                Object ret = query.connector.invoke(objName.getCanonicalName(), query.methodInvoke.getName(),
+                        query.methodInvoke.getValues(), query.methodInvoke.getTypes());
+                if (ret != null) {
+                    if (query.outputJSON) {
+                        System.out.println("{ \"result\": \"" + toString(ret) + "\"}");
+                    } else {
+                        System.out.println(toString(ret));
+                    }
+                }
+                query.connector.disconnect();
+                return;
+            }
+
+            // Read attributes
             ArrayList<JMXMetric> outputMetrics = query.connector.getMetrics(query.metrics);  
             if (query.outputJSON) {
                 System.out.println("[");
@@ -103,6 +137,18 @@ public class JMXQuery {
         
         // Disconnect from JMX Cleanly
         query.connector.disconnect(); 
+    }
+
+    private static final String toString(Object obj) {
+        if (obj instanceof Object[]) {
+            StringBuilder strBuild = new StringBuilder();
+            for (Object el : (Object[]) obj) {
+                strBuild.append(el.toString() + "\n");
+            }
+            return strBuild.toString();
+
+        }
+        return obj.toString();
     }
 
     /**
@@ -181,15 +227,23 @@ public class JMXQuery {
                     username = args[++i];
                 } else if (option.equals("-password") || option.equals("-p")) {
                     password = args[++i];
-                } else if (option.equals("-query") || option.equals("-q")) {
-                    
+                } else if (option.equals("-query") || option.equals("-q")) {                    
                     // Parse query string to break up string in format:
                     // {mbean}/{attribute}/{key};
                     String[] query = args[++i].split(";");
                     for (String metricQuery : query) {
                         metrics.add(new JMXMetric(metricQuery));
                     }
-                
+                } else if (option.equals("-call") || option.equals("-c")) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    byte[] decodedBytes = Base64.getDecoder().decode(args[++i]);
+                    String decodedString = new String(decodedBytes);
+                    methodInvoke = objectMapper.readValue(decodedString, JMXMethod.class);
+                } else if (option.equals("-set") || option.equals("-s")) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    byte[] decodedBytes = Base64.getDecoder().decode(args[++i]);
+                    String decodedString = new String(decodedBytes);
+                    setterInvoke = objectMapper.readValue(decodedString, JMXAttribute.class);
                 } else if (option.equals("-json")) {
                     outputJSON = true;
                 } else if (option.equals("-incjvm")) {
