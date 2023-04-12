@@ -175,6 +175,7 @@ class JMXConnection(object):
         :param jsonOutput:  The JSON Array returned from the command line
         :return:            An array of JMXQuerys
         """
+        jsonOutput = jsonOutput.replace("\\", "/")
         jsonMetrics = json.loads(jsonOutput)
         metrics = []
         for jsonMetric in jsonMetrics:
